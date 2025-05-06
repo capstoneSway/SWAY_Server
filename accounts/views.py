@@ -36,9 +36,9 @@ class KakaoLoginView(APIView):
         kakao code 요청
         '''
         client_id = SOCIAL_AUTH_KAKAO_CLIENT_ID
-        redirect = REDIRECT_URI
+        redirect_uri = REDIRECT_URI
 
-        uri = f"https://kauth.kakao.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect}&response_type=code"
+        uri = f"https://kauth.kakao.com/oauth/authorize?client_id={client_id}&redirect_uri={redirect_uri}&response_type=code"
 
         res = redirect(uri)
         return res
