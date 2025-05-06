@@ -19,6 +19,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/', include('accounts.urls')),
 
     # 카카오 로그인
     path('accounts/', include('dj_rest_auth.urls')),
