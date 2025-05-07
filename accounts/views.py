@@ -120,8 +120,8 @@ class KakaoCallbackView(APIView):
             # 이미 존재하는 사용자라면 로그인 처리
             
             try:
-                print("이미 존재합니다")
                 user = User.objects.get(social_id=social_id)
+                print("이미 존재합니다")
                 response = Response(response_data, status=status.HTTP_200_OK)
                 response.set_cookie("accessToken", value=access_token, max_age=None, expires=None, secure=True, samesite="None", httponly=True)
                 response.set_cookie("refreshToken", value=refresh_token, max_age=None, expires=None, secure=True, samesite="None", httponly=True)
