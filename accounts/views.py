@@ -115,6 +115,9 @@ class KakaoCallbackView(APIView):
                 'social_type': social_type,
                 'social_id': social_id,
                 'user_email': user_email,
+                'nickname': kakao_account.get('profile', {}).get('nickname'),
+                'profile_image': kakao_account.get('profile', {}).get('profile_image_url'),
+                'thumbnail_image': kakao_account.get('profile', {}).get('thumbnail_image_url'),
             }
             
             return Response(response_data, status=status.HTTP_200_OK)
