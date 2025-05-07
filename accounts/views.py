@@ -6,6 +6,11 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from rest_framework import status
 import requests
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+from accounts.models import User
+from django.contrib.auth import authenticate, login
 
 # 환경변수 파일 관련 설정
 env = environ.Env(DEBUG=(bool, False))
@@ -21,13 +26,6 @@ kakao_login_uri = "https://kauth.kakao.com/oauth/authorize"
 kakao_token_uri = "https://kauth.kakao.com/oauth/token"
 kakao_profile_uri = "https://kapi.kakao.com/v2/user/me"
 
-# code 요청
-# def kakao_login(request):
-#     app_rest_api_key = SOCIAL_AUTH_KAKAO_CLIENT_ID
-#     redirect_uri = "http://127.0.0.1:8000/accounts/login/kakao/callback"
-#     return redirect(
-#         f"https://kauth.kakao.com/oauth/authorize?client_id={app_rest_api_key}&redirect_uri={redirect_uri}&response_type=code"
-#     )
 class KakaoLoginView(APIView):
     permission_classes = (AllowAny,)
 
@@ -42,17 +40,6 @@ class KakaoLoginView(APIView):
 
         res = redirect(uri)
         return res
-
-
-# access token 요청
-# def kakao_callback(request):  
-
-
-#     code = request.GET.get("code")
-#     print("인가 코드: ", code)                                                                
-#     # params = urllib.parse.urlencode(request.GET)                                      
-#     # return redirect(f'http://127.0.0.1:8000/accounts/login/kakao/callback?{params}')   
-#     return render(request, 'kakao_callback.html', {"code": code})
 
 
 class KakaoCallbackView(APIView):
@@ -85,6 +72,7 @@ class KakaoCallbackView(APIView):
             token_res.raise_for_status()  # Check for HTTP errors
 
             token_json = token_res.json()
+            refresh_token = token_json.get('refresh_token')
             access_token = token_json.get('access_token')
 
             if not access_token:
@@ -107,24 +95,53 @@ class KakaoCallbackView(APIView):
                 return Response({'error': 'Failed to get kakao account info'}, 
                              status=status.HTTP_400_BAD_REQUEST)
                 
-            user_email = kakao_account.get('email')
-            
-            # TODO: 회원가입 및 로그인 처리 로직 구현 필요
+            user_email = kakao_account.get('email')  # 여기가 None일 수 있음
+            nickname = kakao_account.get('profile', {}).get('nickname')
+            profile_image = kakao_account.get('profile', {}).get('profile_image_url')
+
+            # 이메일이 없으면 기본 이메일을 할당하거나 이메일을 요구할 수 있음
+            if not user_email:
+                # 기본 이메일을 제공하거나, 이메일 입력을 유도할 수 있음
+                return Response({'error': 'Email is required from Kakao account'}, 
+                                 status=status.HTTP_400_BAD_REQUEST)
+
             # 임시로 사용자 정보만 반환
             response_data = {
                 'social_type': social_type,
                 'social_id': social_id,
                 'user_email': user_email,
-                'nickname': kakao_account.get('profile', {}).get('nickname'),
-                'profile_image': kakao_account.get('profile', {}).get('profile_image_url'),
+                'nickname': nickname,
+                'profile_image': profile_image,
                 'thumbnail_image': kakao_account.get('profile', {}).get('thumbnail_image_url'),
+                'access_token': access_token,
+                'refresh_token': refresh_token,
             }
+
+            # 이미 존재하는 사용자라면 로그인 처리
             
-            return Response(response_data, status=status.HTTP_200_OK)
-            
+            try:
+                print("이미 존재합니다")
+                user = User.objects.get(social_id=social_id)
+                response = Response(response_data, status=status.HTTP_200_OK)
+                response.set_cookie("accessToken", value=access_token, max_age=None, expires=None, secure=True, samesite="None", httponly=True)
+                response.set_cookie("refreshToken", value=refresh_token, max_age=None, expires=None, secure=True, samesite="None", httponly=True)
+                return response
+            except User.DoesNotExist:
+                print("신규 생성")
+                # 신규 사용자 생성
+                user = User.objects.create_user(
+                    email=user_email,
+                    social_id=social_id,
+                    social_type=social_type,
+                    nickname=nickname,
+                    profile_image=profile_image
+                )
+
         except requests.RequestException as e:
             return Response({'error': f'Failed to communicate with Kakao API: {str(e)}'}, 
                           status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as e:
             return Response({'error': f'Unexpected error: {str(e)}'}, 
                           status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(response_data, status=status.HTTP_200_OK)

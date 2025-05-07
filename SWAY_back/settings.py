@@ -14,6 +14,7 @@ import os
 import environ
 
 from pathlib import Path
+from datetime import timedelta
 
 # 환경변수 파일 관련 설정
 env = environ.Env(DEBUG=(bool, False))
@@ -52,6 +53,8 @@ INSTALLED_APPS = [
     # django-rest-auth
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'dj_rest_auth',
 
     # django-allauth
@@ -176,3 +179,31 @@ LOGIN_REDIRECT_URL = "/"
 ACCOUNT_AUTHENTICATED_LOGOUT_REDIRECTS = True
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
 
+REST_FRAMEWORK = { 
+	'DEFAULT_PERMISSION_CLASSES': (
+        # 'rest_framework.permissions.IsAuthenticated', # 인증된 사용자만 접근
+        # 'rest_framework.permissions.IsAdminUser', # 관리자만 접근
+        'rest_framework.permissions.AllowAny', # 누구나 접근
+	),
+	
+	'DEFAULT_AUTHENTICATION_CLASSES': (  
+		'rest_framework_simplejwt.authentication.JWTAuthentication', 
+	) 
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=5), # access token의 유효시간 
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7), # refresh token의 유효시간
+    'ROTATE_REFRESH_TOKENS': True, # True일시 새로운 리프레시 토큰이 발급될 때마다 이전의 리프레시 토큰이 만료된다.
+    'BLACKLIST_AFTER_ROTATION': True, # 리프레시 토큰이 새로 발급되면 이전의 리프레시 토큰을 블랙리스트에 추가하는 옵션
+    'UPDATE_LAST_LOGIN':True, # True일시 마지막 로그인 시간을 업데이트한다.
+    'ALGORITHM': 'HS256', # JWT 암호화 알고리즘 지정
+    'SIGNING_KEY': SECRET_KEY, # SECRET_KEY를 이용해 JWT 서명에 사용되는 비밀키를 지정한다.
+  
+    'USER_ID_FIELD': 'username', # 사용자 모델에서 사용자를 식별하는 필드 지정
+    'USER_ID_CLAIM': 'username', # 사용자 모델에서 사용자를 식별하는 클레임 이름 지정
+  
+    'TOKEN_USER_CLASS': 'accounts.User', # JWT 토큰에 저장되는 사용자 정보의 클래스를 지정
+}
+
+AUTH_USER_MODEL = 'accounts.User'
