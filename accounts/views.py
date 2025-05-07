@@ -62,58 +62,66 @@ class KakaoCallbackView(APIView):
         '''
         kakao access_token 요청 및 user_info 요청
         '''
-        data = request.query_params.copy()
+        try:
+            data = request.query_params.copy()
 
-        # access_token 발급 요청
-        code = data.get('code')
-        if not code:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            # access_token 발급 요청
+            code = data.get('code')
+            if not code:
+                return Response({'error': 'Authorization code is required'}, 
+                             status=status.HTTP_400_BAD_REQUEST)
 
-        request_data = {
-            'grant_type': 'authorization_code',
-            'client_id': SOCIAL_AUTH_KAKAO_CLIENT_ID,
-            'redirect_uri': REDIRECT_URI,
-            'client_secret': SOCIAL_AUTH_KAKAO_SECRET,
-            'code': code,
-        }
-        token_headers = {
-            'Content-type': 'application/x-www-form-urlencoded;charset=utf-8'
-        }
-        token_res = requests.post(kakao_token_uri, data=request_data, headers=token_headers)
+            request_data = {
+                'grant_type': 'authorization_code',
+                'client_id': SOCIAL_AUTH_KAKAO_CLIENT_ID,
+                'redirect_uri': REDIRECT_URI,
+                'client_secret': SOCIAL_AUTH_KAKAO_SECRET,
+                'code': code,
+            }
+            token_headers = {
+                'Content-type': 'application/x-www-form-urlencoded;charset=utf-8'
+            }
+            token_res = requests.post(kakao_token_uri, data=request_data, headers=token_headers)
+            token_res.raise_for_status()  # Check for HTTP errors
 
-        token_json = token_res.json()
-        access_token = token_json.get('access_token')
+            token_json = token_res.json()
+            access_token = token_json.get('access_token')
 
-        if not access_token:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        access_token = f"Bearer {access_token}"  # 'Bearer ' 마지막 띄어쓰기 필수
+            if not access_token:
+                return Response({'error': 'Failed to get access token'}, 
+                             status=status.HTTP_400_BAD_REQUEST)
 
-        # kakao 회원정보 요청
-        auth_headers = {
-            "Authorization": access_token,
-            "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
-        }
-        user_info_res = requests.get(kakao_profile_uri, headers=auth_headers)
-        user_info_json = user_info_res.json()
+            auth_headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-type": "application/x-www-form-urlencoded;charset=utf-8",
+            }
+            user_info_res = requests.get(kakao_profile_uri, headers=auth_headers)
+            user_info_res.raise_for_status()  # Check for HTTP errors
+            user_info_json = user_info_res.json()
 
-        social_type = 'kakao'
-        social_id = f"{social_type}_{user_info_json.get('id')}"
+            social_type = 'kakao'
+            social_id = f"{social_type}_{user_info_json.get('id')}"
 
-        kakao_account = user_info_json.get('kakao_account')
-        if not kakao_account:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        user_email = kakao_account.get('email')
-
-        '''
-        # 회원가입 및 로그인 처리 알고리즘 추가필요
-        '''
-
-        # 테스트 값 확인용
-        res = {
-            'social_type': social_type,
-            'social_id': social_id,
-            'user_email': user_email,
-        }
-        response = Response(status=status.HTTP_200_OK)
-        response.data = res
-        return res
+            kakao_account = user_info_json.get('kakao_account')
+            if not kakao_account:
+                return Response({'error': 'Failed to get kakao account info'}, 
+                             status=status.HTTP_400_BAD_REQUEST)
+                
+            user_email = kakao_account.get('email')
+            
+            # TODO: 회원가입 및 로그인 처리 로직 구현 필요
+            # 임시로 사용자 정보만 반환
+            response_data = {
+                'social_type': social_type,
+                'social_id': social_id,
+                'user_email': user_email,
+            }
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except requests.RequestException as e:
+            return Response({'error': f'Failed to communicate with Kakao API: {str(e)}'}, 
+                          status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except Exception as e:
+            return Response({'error': f'Unexpected error: {str(e)}'}, 
+                          status=status.HTTP_500_INTERNAL_SERVER_ERROR)
