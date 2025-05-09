@@ -15,19 +15,6 @@ class UserManager(BaseUserManager):
         user.set_unusable_password()
         user.save(using=self._db)
         return user
-    
-    #python manage.py createsuperuser
-    def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_superuser", True)
-
-        if extra_fields.get("is_staff") is not True:
-            raise ValueError("Superuser must have is_staff=True.")
-        if extra_fields.get("is_superuser") is not True:
-            raise ValueError("Superuser must have is_superuser=True.")
-
-        return self.create_user(email, password, **extra_fields)
-
 
 class User(AbstractUser, PermissionsMixin):
     email = models.EmailField(unique=True)
@@ -46,9 +33,3 @@ class User(AbstractUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
-"""
-class CustomUser(AbstractUser): #로컬
-  nickname = models.CharField(max_length=100)
-  university = models.CharField(max_length=50)
-  location = models.CharField(max_length=200)
-"""

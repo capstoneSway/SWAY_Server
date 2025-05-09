@@ -44,20 +44,3 @@ class BoardSerializer(serializers.ModelSerializer):
         model = Board
         fields = ['id', 'user', 'title', 'body', 'image', 'date']
         read_only_fields = ['user']
-
-"""
-#불필요함으로 삭제예정
-class BoardSerializer(serializers.ModelSerializer):
-    comments = serializers.SerializerMethodField()
-    
-    def get_comments(self, instance):
-        root_comments = instance.comments.filter(parent=None)
-        serializer = CommentSerializer(root_comments, many=True, context=self.context)
-        return serializer.data
-
-    class Meta:
-        model = Board
-        fields = ['id', 'user', 'title', 'body', 'comments', 'date']
-        read_only_fields = ['user']
-"""
-    

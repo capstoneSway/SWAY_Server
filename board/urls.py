@@ -13,16 +13,3 @@ urlpatterns = [
     path('<int:board_id>/comments/<int:pk>/', CommentDetail.as_view(), name='comment-detail'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-"""
-# 게시글 별 댓글 조회용
-    path('<int:board_id>/comments/', CommentList.as_view(), name='board-comments'),
-
-
-    path('<int:board_id>/comments/<int:pk>/', CommentDetail.as_view({
-        'get': 'retrieve',
-        'put': 'update',
-        'patch': 'partial_update',
-        'delete': 'destroy',
-    }),name='comment-detail'),
-"""
