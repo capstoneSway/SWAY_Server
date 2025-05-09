@@ -11,6 +11,8 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from accounts.models import User
 from django.contrib.auth import authenticate, login
+from rest_framework_simplejwt.tokens import RefreshToken
+
 
 # 환경변수 파일 관련 설정
 env = environ.Env(DEBUG=(bool, False))
@@ -122,6 +124,13 @@ class KakaoCallbackView(APIView):
             try:
                 user = User.objects.get(social_id=social_id)
                 print("이미 존재합니다")
+                #jwt 토큰으로 변환
+                refresh = RefreshToken.for_user(user)
+                jwt_token_data = {
+                    'jwt_access': str(refresh.access_token),
+                    'jwt_refresh': str(refresh),
+                }
+                response_data.update(jwt_token_data) #여기까지
                 response = Response(response_data, status=status.HTTP_200_OK)
                 response.set_cookie("accessToken", value=access_token, max_age=None, expires=None, secure=True, samesite="None", httponly=True)
                 response.set_cookie("refreshToken", value=refresh_token, max_age=None, expires=None, secure=True, samesite="None", httponly=True)
@@ -143,5 +152,53 @@ class KakaoCallbackView(APIView):
         except Exception as e:
             return Response({'error': f'Unexpected error: {str(e)}'}, 
                           status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+        #jwt토큰변환2
+        refresh = RefreshToken.for_user(user) 
+        jwt_token_data = {
+            'jwt_access': str(refresh.access_token),
+            'jwt_refresh': str(refresh),
+        }
+        response_data.update(jwt_token_data) #여기까지
         return Response(response_data, status=status.HTTP_200_OK)
+        
+"""
+# 로컬 세팅
+from .models import CustomUser
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import LoginSerializer, SignupSerializer
+from django.contrib import auth
+from django.contrib.auth.hashers import make_password
+
+# Create your views here.
+@api_view(['POST'])
+def login(request):
+    serializer = LoginSerializer(data=request.data)
+    if serializer.is_valid():
+        user = auth.authenticate(
+            request=request,
+            username=serializer.data['username'],
+            password=serializer.data['password']
+        )
+        if user is not None:
+            auth.login(request, user)
+            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    return Response(status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def signup(request):
+    serializer = SignupSerializer(data=request.data)
+    if serializer.is_valid():
+        new_user = serializer.save(password = make_password(serializer.validated_data['password']))
+        auth.login(request, new_user)
+        return Response(status=status.HTTP_200_OK)
+    return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def logout(request):
+    auth.logout(request)
+    return Response(status=status.HTTP_200_OK)
+"""
