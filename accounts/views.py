@@ -98,7 +98,7 @@ class KakaoCallbackView(APIView):
                              status=status.HTTP_400_BAD_REQUEST)
                 
             user_email = kakao_account.get('email')  # 여기가 None일 수 있음
-            nickname = kakao_account.get('profile', {}).get('nickname')
+            username = f"{kakao_account.get('profile', {}).get('nickname')}_{user_email}"
             profile_image = kakao_account.get('profile', {}).get('profile_image_url')
 
             # 이메일이 없으면 기본 이메일을 할당하거나 이메일을 요구할 수 있음
@@ -109,14 +109,14 @@ class KakaoCallbackView(APIView):
 
             # 임시로 사용자 정보만 반환
             response_data = {
-                'social_type': social_type,
-                'social_id': social_id,
-                'user_email': user_email,
-                'nickname': nickname,
-                'profile_image': profile_image,
-                'thumbnail_image': kakao_account.get('profile', {}).get('thumbnail_image_url'),
-                'access_token': access_token,
-                'refresh_token': refresh_token,
+                # 'social_type': social_type,
+                # 'social_id': social_id,
+                # 'user_email': user_email,
+                # 'nickname': nickname,
+                # 'profile_image': profile_image,
+                # 'thumbnail_image': kakao_account.get('profile', {}).get('thumbnail_image_url'),
+                # 'access_token': access_token,
+                # 'refresh_token': refresh_token,
             }
 
             # 이미 존재하는 사용자라면 로그인 처리
@@ -126,11 +126,11 @@ class KakaoCallbackView(APIView):
                 print("이미 존재합니다")
                 #jwt 토큰으로 변환
                 refresh = RefreshToken.for_user(user)
-                # jwt_token_data = {
-                #     'jwt_access': str(refresh.access_token),
-                #     'jwt_refresh': str(refresh),
-                # }
-                # response_data.update(jwt_token_data) #여기까지
+                jwt_token_data = {
+                    'jwt_access': str(refresh.access_token),
+                    'jwt_refresh': str(refresh),
+                }
+                response_data.update(jwt_token_data) #여기까지
                 response = Response(response_data, status=status.HTTP_200_OK)
                 response.set_cookie("jwt_access", value=str(refresh.access_token), max_age=None, expires=None, secure=True, samesite="None", httponly=True)
                 response.set_cookie("jwt_refresh", value=str(refresh), max_age=None, expires=None, secure=True, samesite="None", httponly=True)
@@ -142,7 +142,7 @@ class KakaoCallbackView(APIView):
                     email=user_email,
                     social_id=social_id,
                     social_type=social_type,
-                    nickname=nickname,
+                    username=username,
                     profile_image=profile_image
                 )
 
@@ -160,6 +160,16 @@ class KakaoCallbackView(APIView):
         }
         response_data.update(jwt_token_data) #여기까지
         return Response(response_data, status=status.HTTP_200_OK)
+    
+class UserInfoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            "username": user.username,
+            "profile_image": user.profile_image,
+        })
         
 """
 # 로컬 세팅

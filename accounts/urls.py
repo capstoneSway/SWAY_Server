@@ -1,10 +1,11 @@
 from django.urls import path
 import urllib
-from .views import KakaoLoginView, KakaoCallbackView
+from .views import KakaoLoginView, KakaoCallbackView, UserInfoView
 
 #app_name = 'accounts'
 
 urlpatterns = [
     path('login/kakao/', KakaoLoginView.as_view(), name='kakao_login'),
     path('login/kakao/callback/', KakaoCallbackView.as_view(), name='kakao_callback'),
+    path('user/info/', UserInfoView.as_view(), name='user_info'),
 ]
