@@ -25,10 +25,14 @@ urlpatterns = [
     # 게시판
     path('board/', include('board.urls')),
 
+    # 번개
+    path('lightning/', include('lightning.urls')),
+
     # 카카오 로그인
     path('accounts/', include('dj_rest_auth.urls')),
     path('accounts/registration/', include('dj_rest_auth.registration.urls')),
     path('accounts/', include('allauth.urls')), 
+
     # url(r'accounts/registration/confirm_email/(?P<key>.+)/$', confirm_email, name='confirm_email'),
     path('', include('django.contrib.auth.urls')),
 ]
