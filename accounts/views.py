@@ -126,14 +126,14 @@ class KakaoCallbackView(APIView):
                 print("이미 존재합니다")
                 #jwt 토큰으로 변환
                 refresh = RefreshToken.for_user(user)
-                jwt_token_data = {
-                    'jwt_access': str(refresh.access_token),
-                    'jwt_refresh': str(refresh),
-                }
-                response_data.update(jwt_token_data) #여기까지
+                # jwt_token_data = {
+                #     'jwt_access': str(refresh.access_token),
+                #     'jwt_refresh': str(refresh),
+                # }
+                # response_data.update(jwt_token_data) #여기까지
                 response = Response(response_data, status=status.HTTP_200_OK)
-                response.set_cookie("accessToken", value=access_token, max_age=None, expires=None, secure=True, samesite="None", httponly=True)
-                response.set_cookie("refreshToken", value=refresh_token, max_age=None, expires=None, secure=True, samesite="None", httponly=True)
+                response.set_cookie("jwt_access", value=str(refresh.access_token), max_age=None, expires=None, secure=True, samesite="None", httponly=True)
+                response.set_cookie("jwt_refresh", value=str(refresh), max_age=None, expires=None, secure=True, samesite="None", httponly=True)
                 return response
             except User.DoesNotExist:
                 print("신규 생성")
