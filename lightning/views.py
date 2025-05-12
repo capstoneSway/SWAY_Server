@@ -2,7 +2,11 @@ from rest_framework import generics, permissions
 from .models import Lightning
 from .serializers import LightningSerializer
 from rest_framework.exceptions import PermissionDenied
-
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 
 # 전체 목록 조회 (모든 사용자 가능)
 class LightningList(generics.ListAPIView):
@@ -46,3 +50,20 @@ class LightningDelete(generics.DestroyAPIView):
         if self.request.user != instance.host:
             raise PermissionDenied("삭제 권한이 없습니다.")
         instance.delete()
+
+# 참가자의 번개 신청
+class JoinLightning(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        lightning = get_object_or_404(Lightning, pk=pk)
+        user = request.user
+
+        if lightning.participants.filter(id=user.id).exists():
+            raise ValidationError("이미 참가한 번개입니다.")
+
+        if lightning.participants.count() >= lightning.max_participant:
+            raise ValidationError("참가 인원이 초과되었습니다.")
+
+        lightning.participants.add(user)
+        return Response({"message": "참가 신청이 완료되었습니다."})

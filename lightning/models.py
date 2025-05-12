@@ -26,6 +26,7 @@ class Lightning(models.Model):
     category = models.CharField(max_length=10, choices=Category.choices)
     background_pic = models.CharField(max_length=255, blank=True)
     like = models.IntegerField(default=0)
+    participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='joined_lightnings', blank=True)
 
     def __str__(self):
         return self.title
