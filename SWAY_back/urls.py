@@ -33,6 +33,9 @@ urlpatterns = [
     path('accounts/registration/', include('dj_rest_auth.registration.urls')),
     path('accounts/', include('allauth.urls')), 
 
+    #마이페이지
+    path('mypage/',include('mypage.urls')),
+
     # url(r'accounts/registration/confirm_email/(?P<key>.+)/$', confirm_email, name='confirm_email'),
     path('', include('django.contrib.auth.urls')),
 ]
