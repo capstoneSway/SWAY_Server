@@ -27,4 +27,7 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')), 
     # url(r'accounts/registration/confirm_email/(?P<key>.+)/$', confirm_email, name='confirm_email'),
     path('', include('django.contrib.auth.urls')),
+
+    # 환율 API
+    path('currency/', include('currency.urls')),
 ]
