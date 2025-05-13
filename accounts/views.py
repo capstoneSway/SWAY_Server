@@ -12,6 +12,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from accounts.models import User
 from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import LogoutSerializer
 
 
 # 환경변수 파일 관련 설정
@@ -170,6 +171,16 @@ class UserInfoView(APIView):
             "username": user.username,
             "profile_image": user.profile_image,
         })
+    
+class LogoutAPIView(APIView):
+    serializer_class = LogoutSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response("Successful Logout", status=status.HTTP_204_NO_CONTENT)
         
 """
 # 로컬 세팅
