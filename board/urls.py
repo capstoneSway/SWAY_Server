@@ -1,5 +1,5 @@
-from django.urls import path, include
-from .views import BoardList, BoardCreate, BoardDetail, CommentDetail, CommentList
+from django.urls import path
+from .views import *
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -10,6 +10,9 @@ urlpatterns = [
     path('create/', BoardCreate.as_view(), name='board-create'),
     path('<int:pk>/', BoardDetail.as_view(),name='board-detail'),
     path('<int:board_id>/comments/', CommentList.as_view(), name='comment-list-create'),
+    path('<int:board_id>/update/', BoardUpdate.as_view(), name='board-update'),
     path('<int:board_id>/comments/<int:pk>/', CommentDetail.as_view(), name='comment-detail'),
-
+    path('<int:board_id>/like/', BoardLikeToggleView.as_view()),
+    path('<int:board_id>/comments/<int:comment_id>/like/', CommentLikeToggleView.as_view()),
+    path('<int:board_id>/scrap/', BoardScrapToggleView.as_view()),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

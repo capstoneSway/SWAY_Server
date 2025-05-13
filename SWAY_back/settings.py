@@ -31,7 +31,7 @@ environ.Env.read_env(env_file=os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = env('SECRET_KEY')
 SOCIAL_AUTH_KAKAO_CLIENT_ID = env('SOCIAL_AUTH_KAKAO_CLIENT_ID')
 SOCIAL_AUTH_KAKAO_SECRET = env('SOCIAL_AUTH_KAKAO_SECRET')
-
+EXIM_API_KEY = env('EXIM_API_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'currency',
     'lightning',
     'livechat',
+    'mypage',
     'noti',
 
     # provider
