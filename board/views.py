@@ -12,7 +12,7 @@ from rest_framework.response import Response
 class BoardList(ListAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
+    #authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
     permission_classes = [AllowAny]
     #검색기능
     filter_backends = [filters.SearchFilter]
@@ -21,7 +21,7 @@ class BoardList(ListAPIView):
 class BoardCreate(CreateAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
+    #authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
@@ -30,13 +30,13 @@ class BoardCreate(CreateAPIView):
 class BoardDetail(RetrieveDestroyAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
+    #authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
     permission_classes = [IsOwnerOrReadOnly]
 
 class BoardUpdate(RetrieveUpdateAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
+    #authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
     permission_classes = [IsOwnerOrReadOnly]
 
     def get_object(self):
@@ -44,9 +44,8 @@ class BoardUpdate(RetrieveUpdateAPIView):
         return get_object_or_404(Board, pk=board_id)
 
 class CommentList(ListCreateAPIView):
-    #queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
+    #authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
@@ -63,7 +62,7 @@ class CommentList(ListCreateAPIView):
     
 class CommentDetail(RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
-    authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
+    #authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def get_serializer_class(self):
