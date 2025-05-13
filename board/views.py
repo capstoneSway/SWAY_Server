@@ -58,7 +58,7 @@ class CommentList(ListCreateAPIView):
         board = Board.objects.get(pk=board_id)
         parent_id = self.request.data.get('parent_id')
         parent = get_object_or_404(Comment, pk=parent_id) if parent_id else None
-        parent_user = parent_id.user if parent_id else None
+        parent_user = parent.user if parent else None
         serializer.save(user=self.request.user, board=board, parent_id=parent, parent_user=parent_user)
     
 class CommentDetail(RetrieveUpdateDestroyAPIView):
