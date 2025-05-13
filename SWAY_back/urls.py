@@ -28,6 +28,9 @@ urlpatterns = [
     # 번개
     path('lightning/', include('lightning.urls')),
 
+    # 알림
+    path('noti/', include('noti.urls')),
+
     # 카카오 로그인
     path('accounts/', include('dj_rest_auth.urls')),
     path('accounts/registration/', include('dj_rest_auth.registration.urls')),

@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'currency',
     'lightning',
     'livechat',
+    'noti',
 
     # provider
     'allauth.socialaccount.providers.kakao',
