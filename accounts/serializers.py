@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from .models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 
@@ -18,3 +19,13 @@ class LogoutSerializer(serializers.Serializer):
             RefreshToken(self.token).blacklist()
         except TokenError:
             self.fail('bad_token')
+
+class NicknameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['nickname']
+
+class NationalitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['nationality']

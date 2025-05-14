@@ -4,6 +4,7 @@ from pathlib import Path
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.response import Response
+from rest_framework import generics
 from rest_framework import status
 import requests
 from django.db import models
@@ -12,7 +13,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from accounts.models import User
 from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import LogoutSerializer
+from .serializers import LogoutSerializer, NicknameSerializer, NationalitySerializer
 
 
 # 환경변수 파일 관련 설정
@@ -29,6 +30,8 @@ kakao_login_uri = "https://kauth.kakao.com/oauth/authorize"
 kakao_token_uri = "https://kauth.kakao.com/oauth/token"
 kakao_profile_uri = "https://kapi.kakao.com/v2/user/me"
 
+
+#카카오 로그인
 class KakaoLoginView(APIView):
     permission_classes = (AllowAny,)
 
@@ -161,7 +164,9 @@ class KakaoCallbackView(APIView):
         }
         response_data.update(jwt_token_data) #여기까지
         return Response(response_data, status=status.HTTP_200_OK)
-    
+
+
+# 유저 정보 조회
 class UserInfoView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -181,7 +186,38 @@ class LogoutAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response("Successful Logout", status=status.HTTP_204_NO_CONTENT)
-        
+
+
+# 유저 닉네임 중복 체크
+class CheckNicknameView(APIView):
+    # permission_classes = [AllowAny,]
+    def get(self, request):
+        nickname = request.query_params.get("nickname")
+
+        if not nickname:
+            return Response({"error": "nickname is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        exists = User.objects.filter(nickname=nickname).exists()
+        return Response({"available": not exists})
+
+# 유저 닉네임 저장
+class SetNicknameView(generics.UpdateAPIView):
+    serializer_class = NicknameSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+
+# 유저 국적 저장
+class SetNationalityView(generics.UpdateAPIView):
+    serializer_class = NationalitySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+#==============================================================================
 """
 # 로컬 세팅
 from .models import CustomUser
