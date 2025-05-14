@@ -1,16 +1,20 @@
 from django.shortcuts import render
 import requests
+from rest_framework import generics
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .models import ExchangeRate
-from .serializers import ExchangeRateSerializer
+from .serializers import ExchangeRateSerializer, ExchangeMemoSerializer
+from .models import ExchangeMemo
 from django.conf import settings
 from datetime import datetime, timedelta
 
 
 # Create your views here.
-# 최초 7일치 데이터 저장용 View
+
+# 최초 12일치 데이터 저장용 View
 class FetchInitialExchangeRatesView(APIView):
     def get(self, request):
         base_url = 'https://www.koreaexim.go.kr/site/program/financial/exchangeJSON'
@@ -50,7 +54,8 @@ class FetchInitialExchangeRatesView(APIView):
                     )
         
         return Response({'message': '최근 12일 환율 데이터 저장 완료'}, status=status.HTTP_200_OK)
-        
+
+
 # 매일 환율 저장 View
 class FetchTodayExchangeRatesView(APIView):
     def get(self, request):
@@ -90,8 +95,29 @@ class FetchTodayExchangeRatesView(APIView):
         return Response({'message': '오늘의 환율 데이터 저장 완료'}, status=status.HTTP_200_OK)
 
 
+# 환율 메모 CRUD
+class ExchangeMemoCreateView(generics.CreateAPIView):
+    serializer_class = ExchangeMemoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class ExchangeMemoDeleteView(generics.DestroyAPIView):
+    serializer_class = ExchangeMemoSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        return ExchangeMemo.objects.filter(user=self.request.user)
+
+
+# 환율그래프 및 계산 조회 + 메모 조회 View
 class ExchangeRateOverviewView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, cur_unit):
+        user = request.user
         today = datetime.today().date()
         start = today - timedelta(days=6)  # 오늘 포함 7일간
 
@@ -121,11 +147,21 @@ class ExchangeRateOverviewView(APIView):
             }
         else:
             today_data = None  # 오늘 데이터가 없을 수도 있음 (API 실패 등)
+        
+        memos = ExchangeMemo.objects.filter(
+            user=user,
+            foreign_currency=cur_unit.upper()
+        ).order_by('-date')
+
+        serialized_memos = ExchangeMemoSerializer(memos, many=True).data
 
         return Response({
             "today": today_data,
-            "history": history
+            "history": history,
+            "memos": serialized_memos,
         })
+
+
 # -----------------------------------test-----------------------------------------
 # class FetchExchangeRateView(APIView):
 #     def get(self, request):

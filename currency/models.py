@@ -1,4 +1,5 @@
 from django.db import models
+from accounts.models import User
 
 # Create your models here.
 class ExchangeRate(models.Model):
@@ -16,3 +17,15 @@ class ExchangeRate(models.Model):
 
     class Meta:
         unique_together = ['cur_unit', 'date']
+
+class ExchangeMemo(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    foreign_currency = models.CharField(max_length=10)
+    foreign_amount = models.FloatField()
+    krw_amount = models.FloatField()
+    exchange_rate = models.FloatField()
+    date = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.foreign_currency} - {self.content}"
