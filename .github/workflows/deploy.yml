@@ -1,0 +1,55 @@
+name: Deploy to cloudtype
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Connect deploy key
+        uses: cloudtype-github-actions/connect@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          ghtoken: ${{ secrets.GHP_TOKEN }}
+      - name: Deploy
+        uses: cloudtype-github-actions/deploy@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          project: bestfourteen14/sway_back
+          stage: main
+          yaml: |
+            name: sway-server
+            app: python@3.10
+            options:
+              env:
+                - name: SECRET_KEY
+                  secret: django_secret_key
+                - name: SOCIAL_AUTH_KAKAO_CLIENT_ID
+                  secret: social_auth_kakao_client_id
+                - name: SOCIAL_AUTH_KAKAO_SECRET
+                  secret: social_auth_kakao_secret
+                - name: EXIM_API_KEY
+                  secret: exim_api_key
+                - name: KAKAO_REDIRECT_URI
+                  secret: kakao_redirect_uri
+                - name: db_name
+                  secret: maria_db_name
+                - name: db_user
+                  secret: maria_db_user
+                - name: db_password
+                  secret: maria_db_password
+                - name: db_host
+                  secret: maria_db_host
+                - name: db_port
+                  secret: maria_db_port
+              ports: 8000
+              start: python3 manage.py runserver 0:8000
+              buildenv: []
+            context:
+              git:
+                url: git@github.com:${{ github.repository }}.git
+                ref: ${{ github.ref }}
+              preset: python-django
