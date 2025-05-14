@@ -92,16 +92,16 @@ class BoardLikeToggleView(GenericAPIView):
 class CommentLikeToggleView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, comment_id):
-        comment = get_object_or_404(Comment, pk=comment_id)
+    def post(self, request, board_id, comment_id):
+        comment = get_object_or_404(Comment, pk=comment_id, board_id=board_id)
         like, created = CommentLike.objects.get_or_create(user=request.user, comment=comment)
         if not created:
             like.delete()
             return Response({'liked': False})
         return Response({'liked': True})
 
-    def delete(self, request, comment_id):
-        comment = get_object_or_404(Comment, pk=comment_id)
+    def delete(self, request, board_id, comment_id):
+        comment = get_object_or_404(Comment, pk=comment_id, board_id=board_id)
         CommentLike.objects.filter(user=request.user, comment=comment).delete()
         return Response({'liked': False})
 
