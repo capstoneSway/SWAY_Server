@@ -175,6 +175,8 @@ class UserInfoView(APIView):
         return Response({
             "username": user.username,
             "profile_image": user.profile_image,
+            "nickname": user.nickname,
+            "nationality": user.nationality,
         })
     
 class LogoutAPIView(APIView):
