@@ -104,7 +104,7 @@ class KakaoCallbackView(APIView):
             user_email = kakao_account.get('email')  # 여기가 None일 수 있음
             username = f"{kakao_account.get('profile', {}).get('nickname')}_{user_email}"
             profile_image = kakao_account.get('profile', {}).get('profile_image_url')
-
+            gender = kakao_account.get("gender")
             # 이메일이 없으면 기본 이메일을 할당하거나 이메일을 요구할 수 있음
             if not user_email:
                 # 기본 이메일을 제공하거나, 이메일 입력을 유도할 수 있음
@@ -121,6 +121,7 @@ class KakaoCallbackView(APIView):
                 # 'thumbnail_image': kakao_account.get('profile', {}).get('thumbnail_image_url'),
                 # 'access_token': access_token,
                 # 'refresh_token': refresh_token,
+                # "gender" : gender,
             }
 
             # 이미 존재하는 사용자라면 로그인 처리
@@ -177,6 +178,7 @@ class UserInfoView(APIView):
             "profile_image": user.profile_image,
             "nickname": user.nickname,
             "nationality": user.nationality,
+            "gender": user.gender,
         })
     
 class LogoutAPIView(APIView):
