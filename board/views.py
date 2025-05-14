@@ -16,7 +16,7 @@ class BoardList(ListAPIView):
     permission_classes = [AllowAny]
     #검색기능
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title', 'body']
+    search_fields = ['title', 'content']
 		
 class BoardCreate(CreateAPIView):
     queryset = Board.objects.all()
@@ -58,7 +58,7 @@ class CommentList(ListCreateAPIView):
         parent_id = self.request.data.get('parent_id')
         parent = get_object_or_404(Comment, pk=parent_id) if parent_id else None
         parent_user = parent.user if parent else None
-        serializer.save(user=self.request.user, board=board, parent_id=parent, parent_user=parent_user)
+        serializer.save(user=self.request.user, board=board, parent=parent, parent_user=parent_user)
     
 class CommentDetail(RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
@@ -66,10 +66,9 @@ class CommentDetail(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
+        if self.request.method in ['GET', 'PUT', 'PATCH']:
             return CommentDetailSerializer
         return CommentSerializer
-
 
 
 
