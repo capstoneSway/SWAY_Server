@@ -1,0 +1,14 @@
+name: Daily Exchange Rate Fetch
+
+on:
+  schedule:
+    - cron: '1 2 * * *'  # 한국시간 오전 11:01
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Cloudtype fetch API
+        run: |
+          curl -X GET "https://port-0-sway-server-mam72goke080404a.sel4.cloudtype.app/currency/fetch/daily"
