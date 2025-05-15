@@ -11,4 +11,4 @@ jobs:
     steps:
       - name: Call Cloudtype fetch API
         run: |
-          curl -X GET "https://port-0-sway-server-mam72goke080404a.sel4.cloudtype.app/currency/fetch/daily"
+          curl -X GET "https://port-0-sway-server-mam72goke080404a.sel4.cloudtype.app/currency/fetch/daily/"
