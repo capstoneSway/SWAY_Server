@@ -27,6 +27,8 @@ jobs:
               env:
                 - name: SECRET_KEY
                   secret: django_secret_key
+                - name: DJANGO_ALLOWED_HOSTS
+                  secret: allowed_host
                 - name: SOCIAL_AUTH_KAKAO_CLIENT_ID
                   secret: social_auth_kakao_client_id
                 - name: SOCIAL_AUTH_KAKAO_SECRET
@@ -48,6 +50,7 @@ jobs:
               ports: 8000
               start: python3 manage.py runserver 0:8000
               buildenv: []
+              healthz: /infra/healthz/
             context:
               git:
                 url: git@github.com:${{ github.repository }}.git
