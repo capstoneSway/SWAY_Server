@@ -39,7 +39,7 @@ EXIM_API_KEY = env('EXIM_API_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['port-0-sway-server-mam72goke080404a.sel4.cloudtype.app','127.0.0.1']
+ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1').split(',')
 
 
 # Application definition
