@@ -44,4 +44,7 @@ urlpatterns = [
 
     # 환율 API
     path('currency/', include('currency.urls')),
+
+    # infra 관리
+    path('infra/', include('infra.urls')),
 ]

@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'livechat',
     'mypage',
     'noti',
+    'infra',
 
     # provider
     'allauth.socialaccount.providers.kakao',
