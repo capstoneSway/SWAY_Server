@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework import status
+from rest_framework_simplejwt.views import TokenRefreshView
 import requests
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -63,7 +64,7 @@ class KakaoCallbackView(APIView):
             code = data.get('code')
             if not code:
                 return Response({'error': 'Authorization code is required'}, 
-                             status=status.HTTP_400_BAD_REQUEST)
+                            status=status.HTTP_400_BAD_REQUEST)
 
             request_data = {
                 'grant_type': 'authorization_code',
@@ -84,7 +85,7 @@ class KakaoCallbackView(APIView):
 
             if not access_token:
                 return Response({'error': 'Failed to get access token'}, 
-                             status=status.HTTP_400_BAD_REQUEST)
+                            status=status.HTTP_400_BAD_REQUEST)
 
             auth_headers = {
                 "Authorization": f"Bearer {access_token}",
@@ -100,7 +101,7 @@ class KakaoCallbackView(APIView):
             kakao_account = user_info_json.get('kakao_account')
             if not kakao_account:
                 return Response({'error': 'Failed to get kakao account info'}, 
-                             status=status.HTTP_400_BAD_REQUEST)
+                            status=status.HTTP_400_BAD_REQUEST)
                 
             user_email = kakao_account.get('email')  # 여기가 None일 수 있음
             username = f"{kakao_account.get('profile', {}).get('nickname')}_{user_email}"
@@ -110,7 +111,7 @@ class KakaoCallbackView(APIView):
             if not user_email:
                 # 기본 이메일을 제공하거나, 이메일 입력을 유도할 수 있음
                 return Response({'error': 'Email is required from Kakao account'}, 
-                                 status=status.HTTP_400_BAD_REQUEST)
+                                status=status.HTTP_400_BAD_REQUEST)
 
             # 임시로 사용자 정보만 반환
             response_data = {
@@ -154,10 +155,10 @@ class KakaoCallbackView(APIView):
 
         except requests.RequestException as e:
             return Response({'error': f'Failed to communicate with Kakao API: {str(e)}'}, 
-                          status=status.HTTP_503_SERVICE_UNAVAILABLE)
+                        status=status.HTTP_503_SERVICE_UNAVAILABLE)
         except Exception as e:
             return Response({'error': f'Unexpected error: {str(e)}'}, 
-                          status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         #jwt토큰변환2
         refresh = RefreshToken.for_user(user) 
         jwt_token_data = {
@@ -166,6 +167,24 @@ class KakaoCallbackView(APIView):
         }
         response_data.update(jwt_token_data) #여기까지
         return Response(response_data, status=status.HTTP_200_OK)
+
+# access 토큰 재발급
+class CookieTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        refresh_token = request.COOKIES.get('jwt_refresh')
+        if not refresh_token:
+            return Response({'error': 'Refresh token is missing'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        request.data['refresh'] = refresh_token
+        response = super().post(request, *args, **kwargs)
+
+        if response.status_code == 200:
+            if "access" in response.data:
+                response.set_cookie("jwt_access", value=response.data["access"], httponly=True, secure=True, samesite="None")
+            if "refresh" in response.data:
+                response.set_cookie("jwt_refresh", value=response.data["refresh"], httponly=True, secure=True, samesite="None")
+
+        return response
 
 
 # 유저 정보 조회

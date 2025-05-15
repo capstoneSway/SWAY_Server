@@ -211,13 +211,14 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7), # refresh token의 유효시간
     'ROTATE_REFRESH_TOKENS': True, # True일시 새로운 리프레시 토큰이 발급될 때마다 이전의 리프레시 토큰이 만료된다.
     'BLACKLIST_AFTER_ROTATION': True, # 리프레시 토큰이 새로 발급되면 이전의 리프레시 토큰을 블랙리스트에 추가하는 옵션
+    "TOKEN_BLACKLIST_ENABLED": True, # 블랙리스트 기능을 활성화하는 옵션
     'UPDATE_LAST_LOGIN':True, # True일시 마지막 로그인 시간을 업데이트한다.
     'ALGORITHM': 'HS256', # JWT 암호화 알고리즘 지정
     'SIGNING_KEY': SECRET_KEY, # SECRET_KEY를 이용해 JWT 서명에 사용되는 비밀키를 지정한다.
-  
+
     'USER_ID_FIELD': 'username', # 사용자 모델에서 사용자를 식별하는 필드 지정
     'USER_ID_CLAIM': 'username', # 사용자 모델에서 사용자를 식별하는 클레임 이름 지정
-  
+
     'TOKEN_USER_CLASS': 'accounts.User', # JWT 토큰에 저장되는 사용자 정보의 클래스를 지정
 }
 

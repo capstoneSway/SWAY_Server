@@ -6,13 +6,15 @@ from .views import (KakaoLoginView,
                     LogoutAPIView, 
                     CheckNicknameView,
                     SetNicknameView,
-                    SetNationalityView)
+                    SetNationalityView,
+                    CookieTokenRefreshView)
 
 #app_name = 'accounts'
 
 urlpatterns = [
     path('login/kakao/', KakaoLoginView.as_view(), name='kakao_login'),
     path('login/kakao/callback/', KakaoCallbackView.as_view(), name='kakao_callback'),
+    path('token/refresh/', CookieTokenRefreshView.as_view(), name='token_refresh'),
     path('user/info/', UserInfoView.as_view(), name='user_info'),
     path('logout/kakao/', LogoutAPIView.as_view(), name='kakao_logout'),
     path('check-nickname/', CheckNicknameView.as_view(), name='check-nickname'),
