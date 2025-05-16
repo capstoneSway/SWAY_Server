@@ -150,7 +150,8 @@ class KakaoCallbackView(APIView):
                     social_id=social_id,
                     social_type=social_type,
                     username=username,
-                    profile_image=profile_image
+                    profile_image=profile_image,
+                    gender=gender
                 )
 
         except requests.RequestException as e:

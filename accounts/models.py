@@ -40,6 +40,7 @@ class User(AbstractUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     nickname = models.CharField(max_length=50, blank=True, null=True, unique=True)
     profile_image = models.URLField(blank=True, null=True)
+    gender = models.CharField(max_length=10, blank=True, null=True)
     social_id = models.CharField(max_length=100, unique=True, default="")
     social_type = models.CharField(max_length=30, default="")
     nationality = models.CharField(max_length=50, blank=True, null=True)
