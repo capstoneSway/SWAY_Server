@@ -1,42 +1,59 @@
 from .models import *
-from .serializers import BoardSerializer, CommentSerializer, CommentDetailSerializer
-from rest_framework import filters, status
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
+from .serializers import *
 from .permissions import IsOwnerOrReadOnly
+from mypage.models import BlockUser
+from mypage.utils import get_active_restriction
 from django.shortcuts import get_object_or_404
+from rest_framework import filters
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.generics import ListAPIView, ListCreateAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView, RetrieveUpdateAPIView, GenericAPIView
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
+
+
 
 class BoardList(ListAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    #authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
     permission_classes = [AllowAny]
     #검색기능
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'content']
-		
+	
+    def get_queryset(self):
+        queryset = Board.objects.all()
+
+        user = self.request.user
+        if user.is_authenticated:
+            blocked_user_ids = BlockUser.objects.filter(user=user).values_list('blocked_user', flat=True)
+            queryset = queryset.exclude(user__in=blocked_user_ids)
+
+        return queryset
+
 class BoardCreate(CreateAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    #authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
+        restriction = get_active_restriction(self.request.user, 'board_ban')
+        if restriction:
+            if restriction.release_at:
+                until = restriction.release_at.strftime('%Y-%m-%d %H:%M')
+                msg = f"You are restricted from creating posts until {until}."
+            else:
+                msg = "You are permanently restricted from creating posts."
+            raise PermissionDenied(msg)
         serializer.save(user=self.request.user)
 
 class BoardDetail(RetrieveDestroyAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    #authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
     permission_classes = [IsOwnerOrReadOnly]
 
 class BoardUpdate(RetrieveUpdateAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    #authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
     permission_classes = [IsOwnerOrReadOnly]
 
     def get_object(self):
@@ -45,24 +62,38 @@ class BoardUpdate(RetrieveUpdateAPIView):
 
 class CommentList(ListCreateAPIView):
     serializer_class = CommentSerializer
-    #authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         board_id = self.kwargs['board_id']
-        return Comment.objects.filter(board_id=board_id, parent_id=None)
+        queryset = Comment.objects.filter(board_id=board_id, parent=None)
 
+        user = self.request.user
+        if user.is_authenticated:
+            blocked_user_ids = BlockUser.objects.filter(user=user).values_list('blocked_user', flat=True)
+            queryset = queryset.exclude(user__in=blocked_user_ids)
+
+        return queryset
     def perform_create(self, serializer):
+        restriction = get_active_restriction(self.request.user, 'board_ban')
+        if restriction:
+            if restriction.release_at:
+                until = restriction.release_at.strftime('%Y-%m-%d %H:%M')
+                msg = f"You are restricted from posting comments until {until}."
+            else:
+                msg = "You are permanently restricted from posting comments."
+            raise PermissionDenied(msg)
+        
         board_id = self.kwargs['board_id']
         board = Board.objects.get(pk=board_id)
         parent_id = self.request.data.get('parent_id')
         parent = get_object_or_404(Comment, pk=parent_id) if parent_id else None
         parent_user = parent.user if parent else None
+
         serializer.save(user=self.request.user, board=board, parent=parent, parent_user=parent_user)
     
 class CommentDetail(RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
-    #authentication_classes = [JWTAuthentication, BasicAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def get_serializer_class(self):
@@ -120,4 +151,22 @@ class BoardScrapToggleView(GenericAPIView):
         board = get_object_or_404(Board, pk=board_id)
         BoardScrap.objects.filter(user=request.user, board=board).delete()
         return Response({'scrapped': False})
+    
+class BoardReportView(CreateAPIView):
+    serializer_class = ReportSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        board_id = self.kwargs['board_id']
+        board = get_object_or_404(Board, pk=board_id)
+        serializer.save(reporter=self.request.user, board=board)
+
+class CommentReportView(CreateAPIView):
+    serializer_class = ReportSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        comment_id = self.kwargs['comment_id']
+        comment = get_object_or_404(Comment, pk=comment_id)
+        serializer.save(reporter=self.request.user, comment=comment)
 

@@ -15,4 +15,6 @@ urlpatterns = [
     path('<int:board_id>/like/', BoardLikeToggleView.as_view()),
     path('<int:board_id>/comments/<int:comment_id>/like/', CommentLikeToggleView.as_view()),
     path('<int:board_id>/scrap/', BoardScrapToggleView.as_view()),
+    path('<int:board_id>/report/', BoardReportView.as_view(), name='board-report'),
+    path('<int:board_id>/comments/<int:comment_id>/report/', CommentReportView.as_view(), name='comment-report'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
