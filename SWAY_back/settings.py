@@ -136,6 +136,9 @@ from firebase_admin import credentials
 
 cred_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 cred_dict = json.loads(cred_json)
+
+cred_dict["private_key"] = cred_dict["private_key"].replace("\\n", "\n")
+
 cred = credentials.Certificate(cred_dict)
 firebase_admin.initialize_app(cred)
 
