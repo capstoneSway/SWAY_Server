@@ -47,6 +47,8 @@ jobs:
                   secret: maria_db_host
                 - name: db_port
                   secret: maria_db_port
+                - name: GOOGLE_APPLICATION_CREDENTIALS
+                  secret: google_application_credentials
               ports: 8000
               start: python3 manage.py runserver 0:8000
               buildenv: []

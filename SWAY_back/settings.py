@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 import environ
 import pymysql
+import json
 
 pymysql.install_as_MySQLdb()
 
@@ -133,8 +134,9 @@ CHANNEL_LAYERS = {
 import firebase_admin
 from firebase_admin import credentials
 
-cred_path = os.path.join(BASE_DIR, "serviceAccountKey.json")
-cred = credentials.Certificate(cred_path)
+cred_json = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+cred_dict = json.loads(cred_json)
+cred = credentials.Certificate(cred_dict)
 firebase_admin.initialize_app(cred)
 
 # Database
