@@ -3,6 +3,7 @@
 
 myvenv/
 .DS_Store
+serviceAccountKey.json
 
 ### Django ###
 *.log

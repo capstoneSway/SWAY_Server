@@ -129,6 +129,14 @@ CHANNEL_LAYERS = {
     },
 }
 
+# Firebase
+import firebase_admin
+from firebase_admin import credentials
+
+cred_path = os.path.join(BASE_DIR, "serviceAccountKey.json")
+cred = credentials.Certificate(cred_path)
+firebase_admin.initialize_app(cred)
+
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
