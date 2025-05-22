@@ -44,13 +44,6 @@ class NotiSettingView(RetrieveUpdateAPIView):
         return obj
     
 
-class RestrictionListView(ListAPIView): #관리자전용
-    queryset = Restriction.objects.all().order_by('-created_at')
-    serializer_class = RestrictionSerializer
-    permission_classes = [IsAdminUser]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['user__username', 'user__nickname']
-
 class MyRestrictionListView(ListAPIView):
     serializer_class = RestrictionSerializer
     permission_classes = [IsAuthenticated]
@@ -58,15 +51,6 @@ class MyRestrictionListView(ListAPIView):
     def get_queryset(self):
         return Restriction.objects.filter(user=self.request.user).order_by('-created_at')
 
-class RestrictionCreateView(CreateAPIView): #관리자전용
-    queryset = Restriction.objects.all()
-    serializer_class = RestrictionSerializer
-    permission_classes = [IsAdminUser]
-
-class RestrictionAdminDetailView(RetrieveUpdateDestroyAPIView): #관리자전용
-    queryset = Restriction.objects.all()
-    serializer_class = RestrictionSerializer
-    permission_classes = [IsAdminUser]
 
 
 
@@ -77,46 +61,6 @@ class FeedbackCreateView(CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-class FeedbackListView(ListAPIView):  # 관리자 전용
-    queryset = Feedback.objects.all().order_by('-submitted_at')
-    serializer_class = FeedbackSerializer
-    permission_classes = [IsAdminUser]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['title', 'content', 'user__username']
-
-
-class FeedbackDetailView(RetrieveAPIView):  # 관리자 전용
-    queryset = Feedback.objects.all()
-    serializer_class = FeedbackSerializer
-    permission_classes = [IsAdminUser]
-
-class ReportListView(ListAPIView):
-    queryset = Report.objects.all().order_by('-created_at')
-    serializer_class = ReportSerializer
-    permission_classes = [IsAdminUser]
-
-class ReportDetailView(RetrieveAPIView):
-    queryset = Report.objects.all()
-    serializer_class = ReportSerializer
-    permission_classes = [IsAdminUser]
-
-class RestrictFromReportView(CreateAPIView):
-    serializer_class = RestrictionSerializer
-    permission_classes = [IsAdminUser]
-
-    def perform_create(self, serializer):
-        report_id = self.kwargs['pk']
-        report = get_object_or_404(Report, pk=report_id)
-
-        if report.board:
-            target_user = report.board.user
-        elif report.comment:
-            target_user = report.comment.user
-        else:
-            raise ValidationError("Report has no valid target.")
-
-        serializer.save(user=target_user)
 
 
 class MyBlockedUserListView(ListAPIView):
