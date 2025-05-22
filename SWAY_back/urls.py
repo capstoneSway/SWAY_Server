@@ -28,6 +28,9 @@ urlpatterns = [
     # 번개
     path('lightning/', include('lightning.urls')),
 
+    # 채팅
+    path('livechat/', include('livechat.urls')),
+
     # 알림
     path('noti/', include('noti.urls')),
 

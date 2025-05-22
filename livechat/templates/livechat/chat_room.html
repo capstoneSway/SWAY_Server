@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Chat Room</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h2 {
+      margin-top: 30px;
+      color: #333;
+    }
+
+    #chat-container {
+      background-color: #fff;
+      width: 80%;
+      max-width: 800px;
+      height: 500px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+
+    #chat-log {
+      flex: 1;
+      padding: 20px;
+      overflow-y: scroll;
+      border-bottom: 1px solid #eee;
+    }
+
+    .chat-line {
+      display: flex;
+      margin: 10px 0;
+    }
+
+    .bubble {
+      max-width: 60%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      line-height: 1.4;
+      font-size: 0.95rem;
+      position: relative;
+    }
+
+    .bubble::after {
+      content: attr(data-time);
+      display: block;
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .self {
+      justify-content: flex-end;
+    }
+
+    .self .bubble {
+      background-color: #007bff;
+      color: white;
+      border-bottom-right-radius: 0;
+    }
+
+    .other {
+      justify-content: flex-start;
+    }
+
+    .other .bubble {
+      background-color: #f1f0f0;
+      color: #333;
+      border-bottom-left-radius: 0;
+    }
+
+    .nickname {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    #chat-input-area {
+      display: flex;
+      padding: 16px;
+      background-color: #f9fafb;
+    }
+
+    #chat-message-input {
+      flex: 1;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    #chat-message-submit {
+      margin-left: 10px;
+      padding: 10px 18px;
+      font-size: 1rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    #chat-message-submit:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h2>채팅방 - {{ lightning.title }}</h2>
+  <div id="chat-container">
+    <div id="chat-log"></div>
+    <div id="chat-input-area">
+      <input id="chat-message-input" type="text" autocomplete="off" placeholder="메시지를 입력하세요" />
+      <button id="chat-message-submit">전송</button>
+    </div>
+  </div>
+
+  <script>
+    const roomId = "{{ lightning.id }}";
+    const currentUserNickname = "테스트유저";
+    
+    const socket = new WebSocket(
+      'ws://' + window.location.host + '/ws/chat/' + roomId + '/'
+    );
+
+    socket.onmessage = function(e) {
+      const data = JSON.parse(e.data);
+      const log = document.querySelector('#chat-log');
+
+      const isSelf = data.sender === currentUserNickname;
+
+      const now = new Date();
+      const timestamp = now.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const bubbleHTML = `
+        <div class="chat-line ${isSelf ? 'self' : 'other'}">
+          <div>
+            ${!isSelf ? `<div class="nickname">${data.sender}</div>` : ''}
+            <div class="bubble" data-time="${timestamp}">${data.message}</div>
+          </div>
+        </div>
+      `;
+
+      log.innerHTML += bubbleHTML;
+      log.scrollTop = log.scrollHeight;
+    };
+
+    socket.onclose = function(e) {
+      console.error('WebSocket closed unexpectedly');
+    };
+
+    document.querySelector('#chat-message-submit').onclick = function(e) {
+      const input = document.querySelector('#chat-message-input');
+      const message = input.value.trim();
+      if (message) {
+        socket.send(JSON.stringify({ 'message': message }));
+        input.value = '';
+      }
+    };
+  </script>
+</body>
+</html>

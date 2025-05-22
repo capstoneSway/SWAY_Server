@@ -24,7 +24,7 @@ class LightningCreate(generics.CreateAPIView):
     def perform_create(self, serializer):
         lightning = serializer.save(host=self.request.user)
         lightning.participants.add(self.request.user)
-        lightning.current_participatn = lightning.participants.count()
+        lightning.current_participant = lightning.participants.count()
         lightning.save() # 주최자는 현재 로그인한 유저
 
 # 상세 조회 (모든 사용자 가능)
