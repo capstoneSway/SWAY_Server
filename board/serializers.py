@@ -78,6 +78,7 @@ class CommentDetailSerializer(serializers.ModelSerializer):
 
 class BoardSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
+    comment_count = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
     scrap_count = serializers.SerializerMethodField()
     nickname = serializers.CharField(source='user.nickname', read_only=True)
@@ -85,9 +86,12 @@ class BoardSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Board
-        fields = ['id', 'username', 'nickname', 'profile_image', 'title', 'content', 'image', 'date', 'like_count', 'scrap_count']
-        read_only_fields = ['id', 'user', 'username', 'nickname', 'profile_image', 'date', 'like_count', 'scrap_count']
-    
+        fields = ['id', 'username', 'nickname', 'profile_image', 'title', 'content', 'image', 'date', 'comment_count', 'like_count', 'scrap_count']
+        read_only_fields = ['id', 'user', 'username', 'nickname', 'profile_image', 'date', 'comment_count', 'like_count', 'scrap_count']
+
+    def get_comment_count(self, obj):
+        return obj.comments.count() 
+
     def get_like_count(self, obj):
         return obj.likes.count()
 
