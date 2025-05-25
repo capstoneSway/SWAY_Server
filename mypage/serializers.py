@@ -36,7 +36,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feedback
         fields = ['id', 'user', 'nickname' ,'feedback_type', 'title', 'content', 'submitted_at']
-        read_only_fields = ['id', 'submitted_at']
+        read_only_fields = ['id', 'user', 'nickname', 'submitted_at']
 
 
 class BlockUserSerializer(serializers.ModelSerializer):
