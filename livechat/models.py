@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from lightning.models import Lightning
+from SWAY_back.storages import MediaStorage
 
 # Create your models here.
 class LiveChatRoom(models.Model):
@@ -16,7 +17,7 @@ class LiveChatMessage(models.Model):
     room = models.ForeignKey(LiveChatRoom, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     message = models.TextField(blank=True)
-    picture = models.CharField(max_length=255, blank=True)
+    picture = models.ImageField(upload_to='media/chat/', storage=MediaStorage(), blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

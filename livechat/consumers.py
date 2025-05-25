@@ -27,24 +27,30 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data): # 메시지 수신
         data = json.loads(text_data)
-        message = data['message']
+        # message = data['message']
+        message = data.get('message') # 메시지 내용(없으면 None)
+        image_url = data.get('image_url') # 이미지 주소(없으면 None)
         sender = self.scope['user']
 
         room = await self.get_chat_room(self.lightning_id)
-        await self.create_message(room, sender, message)
 
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'chat_message',
-                'message': message,
-                'sender': sender.nickname or sender.email
-            }
-        )
+        # ✅ DB에 저장: 이미지 또는 메시지가 있을 경우에만 저장
+        if message or image_url:
+            await self.create_message(room, sender, message, image_url)
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'chat_message',
+                    'message': message,
+                    'image_url': image_url,
+                    'sender': sender.nickname or sender.email
+                }
+            )
 
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
             'message': event['message'],
+            'image_url': event['image_url'],
             'sender': event['sender']
         }))
 
@@ -53,5 +59,5 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return LiveChatRoom.objects.get(lightning_id=lightning_id)
 
     @database_sync_to_async
-    def create_message(self, room, sender, message):
-        return LiveChatMessage.objects.create(room=room, sender=sender, message=message)
+    def create_message(self, room, sender, message=None, image_url=None):
+        return LiveChatMessage.objects.create(room=room, sender=sender, message=message or '', picture=image_url)

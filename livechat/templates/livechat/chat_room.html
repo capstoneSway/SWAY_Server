@@ -121,10 +121,20 @@
 </head>
 <body>
   <h2>채팅방 - {{ lightning.title }}</h2>
+  <!-- ✅ 이미지 업로드 영역 추가
+  <div id="image-upload-area" style="padding: 0 16px 8px;">
+    <input type="file" id="chat-image-input" accept="image/*" />
+  </div> -->
   <div id="chat-container">
     <div id="chat-log"></div>
+
     <div id="chat-input-area">
       <input id="chat-message-input" type="text" autocomplete="off" placeholder="메시지를 입력하세요" />
+      
+      <!-- 📎 이미지 업로드 아이콘 -->
+      <label for="chat-image-input" id="chat-image-upload-label">📎</label>
+      <input type="file" id="chat-image-input" accept="image/*" style="display: none;" />
+      
       <button id="chat-message-submit">전송</button>
     </div>
   </div>
@@ -149,11 +159,21 @@
         minute: '2-digit'
       });
 
+      let bubbleContent = '';
+
+      if (data.message) {
+        bubbleContent = `<div class="bubble" data-time="${timestamp}">${data.message}</div>`;
+      } else if (data.image_url) {
+        bubbleContent = `<div class="bubble" data-time="${timestamp}">
+                          <img src="${data.image_url}" style="max-width: 100%; border-radius: 8px;" />
+                          </div>`;
+      }
+
       const bubbleHTML = `
         <div class="chat-line ${isSelf ? 'self' : 'other'}">
           <div>
             ${!isSelf ? `<div class="nickname">${data.sender}</div>` : ''}
-            <div class="bubble" data-time="${timestamp}">${data.message}</div>
+            ${bubbleContent}
           </div>
         </div>
       `;
@@ -174,6 +194,27 @@
         input.value = '';
       }
     };
+    
+    // ✅ 이미지 업로드 추가 부분
+    const imageInput = document.querySelector('#chat-image-input');
+    imageInput.addEventListener('change', function () {
+      const file = imageInput.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      fetch(`/livechat/upload/${roomId}/`, {
+        method: 'POST',
+        body: formData,
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log("이미지 업로드 완료: ", data.image_url);
+          socket.send(JSON.stringify({ 'image_url': data.image_url }));
+        })
+        .catch(error => console.error('Upload failed:', error));
+    });
   </script>
 </body>
 </html>
