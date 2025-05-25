@@ -1,22 +1,19 @@
 from django.db import models
 from accounts.models import User
 
-# Create your models here.
 class ExchangeRate(models.Model):
-    cur_unit = models.CharField(max_length=10)  # 통화코드
-    cur_nm = models.CharField(max_length=50)    # 통화명
-    ttb = models.CharField(max_length=20)       # 전신환(송금 받으실 때)
-    tts = models.CharField(max_length=20)       # 전신환(송금 보내실 때)
-    deal_bas_r = models.CharField(max_length=20) # 매매 기준율
-    bkpr = models.CharField(max_length=20)      # 장부가격
-    y_efee_r = models.CharField(max_length=20)  # 년환가료율
-    ten_d_efee_r = models.CharField(max_length=20)  # 10일환가료율
-    kftc_deal_bas_r = models.CharField(max_length=20)  # 서울외국환중개 기준율
-    kftc_bkpr = models.CharField(max_length=20)        # 서울외국환중개 장부가격
-    date = models.DateField()   # 저장 날짜
+    date = models.DateField()
+    base_currency = models.CharField(max_length=10, default='KRW')
+    target_currency = models.CharField(max_length=10)
+    rate = models.FloatField()  # 1 KRW → target_currency
+    unit_rate = models.FloatField(null=True, blank=True)  # 1 target_currency → KRW
+    currency_name = models.CharField(max_length=50, null=True, blank=True)  # 예: 미국 달러
 
     class Meta:
-        unique_together = ['cur_unit', 'date']
+        unique_together = ('date', 'base_currency', 'target_currency')
+
+    def __str__(self):
+        return f"{self.date} | {self.base_currency} → {self.target_currency} ({self.currency_name}) = {self.rate}"
 
 class ExchangeMemo(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

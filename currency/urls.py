@@ -3,7 +3,8 @@ from .views import (FetchInitialExchangeRatesView,
                     FetchTodayExchangeRatesView, 
                     ExchangeRateOverviewView,
                     ExchangeMemoCreateView,
-                    ExchangeMemoDeleteView)
+                    ExchangeMemoDeleteView,
+                    FetchExchangeRatesByDateView)
 
 urlpatterns = [
     path('fetch/initial/', FetchInitialExchangeRatesView.as_view(), name='fetch-initial'),
@@ -11,4 +12,5 @@ urlpatterns = [
     path('overview/<str:cur_unit>/', ExchangeRateOverviewView.as_view(), name='currency-overview'),
     path('memo/', ExchangeMemoCreateView.as_view(), name='memo-create'),
     path('memo/<int:id>/', ExchangeMemoDeleteView.as_view(), name='memo-delete'),
+    path('fetch/by-date/', FetchExchangeRatesByDateView.as_view(), name='fetch_by_date'),
 ]

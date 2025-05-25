@@ -10,89 +10,116 @@ from .serializers import ExchangeRateSerializer, ExchangeMemoSerializer
 from .models import ExchangeMemo
 from django.conf import settings
 from datetime import datetime, timedelta
-
+from .currency_name import CURRENCY_NAME_MAP
 
 # Create your views here.
-
-# 최초 12일치 데이터 저장용 View
+# 최근 14일 환율 저장 View
 class FetchInitialExchangeRatesView(APIView):
     def get(self, request):
-        base_url = 'https://www.koreaexim.go.kr/site/program/financial/exchangeJSON'
+        base_url = 'https://api.exchangerate.host/historical'  # 또는 currencylayer API 엔드포인트
         today = datetime.today()
-        days = [today - timedelta(days=i) for i in range(0, 12)]
+        days = [today - timedelta(days=i) for i in reversed(range(14))]
+
+        currencies = ",".join([
+            "AED", "AUD", "BHD", "BND", "CAD", "CHF", "CNY", "DKK", "EUR", "GBP",
+            "HKD", "IDR", "JPY", "KWD", "MYR", "NOK", "NZD", "SAR", "SEK", "SGD", "THB", "USD"
+        ])
+
+        saved_count = 0
 
         for day in days:
-            date_str = day.strftime("%Y%m%d")
+            date_str = day.strftime('%Y-%m-%d')
+
             params = {
-                'authkey': settings.EXIM_API_KEY,
-                'searchdate': date_str,
-                'data': 'AP01',
+                'access_key': settings.CURRENCYLAYER_API_KEY,
+                'date': date_str,
+                'source': 'KRW',
+                'currencies': currencies
             }
+
             response = requests.get(base_url, params=params)
             if response.status_code != 200:
                 continue
+
             data = response.json()
-            for item in data:
-                serializer = ExchangeRateSerializer(data={
-                    'cur_unit': item.get('cur_unit'),
-                    'cur_nm': item.get('cur_nm'),
-                    'ttb': item.get('ttb'),
-                    'tts': item.get('tts'),
-                    'deal_bas_r': item.get('deal_bas_r'),
-                    'bkpr': item.get('bkpr'),
-                    'y_efee_r': item.get('yy_efee_r'),
-                    'ten_d_efee_r': item.get('ten_dd_efee_r'),
-                    'kftc_deal_bas_r': item.get('kftc_deal_bas_r'),
-                    'kftc_bkpr': item.get('kftc_bkpr'),
-                    'date': day.date()
-                })
-                if serializer.is_valid():
-                    ExchangeRate.objects.update_or_create(
-                        cur_unit=item.get('cur_unit'),
-                        date=day.date(),
-                        defaults=serializer.validated_data
-                    )
-        
-        return Response({'message': '최근 12일 환율 데이터 저장 완료'}, status=status.HTTP_200_OK)
+            quotes = data.get('quotes', {})
+            date_str_from_api = data.get("date")
+            if not date_str_from_api:
+                continue
+
+            try:
+                date_obj = datetime.strptime(date_str_from_api, "%Y-%m-%d").date()
+            except ValueError:
+                continue
+
+            for key, rate in quotes.items():
+                # key 예시: "KRWUSD" → target_currency = "USD"
+                if not key.startswith("KRW"):
+                    continue
+                target_currency = key[3:]
+                unit_rate = round(1 / rate, 4) if rate else None
+                currency_name = CURRENCY_NAME_MAP.get(target_currency, '')
+
+                ExchangeRate.objects.update_or_create(
+                    date=date_obj,
+                    base_currency='KRW',
+                    target_currency=target_currency,
+                    defaults={
+                        'rate': rate,
+                        'unit_rate': unit_rate,
+                        'currency_name': currency_name,
+                    }
+                )
+                saved_count += 1
+
+        return Response({'message': f'최근 14일 환율 데이터 저장 완료 (총 {saved_count}건)'}, status=status.HTTP_200_OK)
 
 
 # 매일 환율 저장 View
 class FetchTodayExchangeRatesView(APIView):
     def get(self, request):
-        today = datetime.today().strftime("%Y%m%d")
-        base_url = 'https://www.koreaexim.go.kr/site/program/financial/exchangeJSON'
+        base_url = 'https://api.currencylayer.com/live'
+        date_obj = datetime.today().date()
+        currencies = ",".join([
+            "AED","AUD","BHD","BND","CAD","CHF","CNY","DKK","EUR","GBP",
+            "HKD","IDR","JPY","KWD","MYR","NOK","NZD","SAR","SEK","SGD","THB","USD"
+        ])
+
         params = {
-            'authkey': settings.EXIM_API_KEY,
-            'searchdate': today,
-            'data': 'AP01',
+            'access_key': settings.CURRENCYLAYER_API_KEY,
+            'source': 'KRW',
+            'currencies': currencies,
         }
+
         response = requests.get(base_url, params=params)
         if response.status_code != 200:
             return Response({'error': 'API 요청 실패'}, status=status.HTTP_502_BAD_GATEWAY)
 
         data = response.json()
-        for item in data:
-            serializer = ExchangeRateSerializer(data={
-                'cur_unit': item.get('cur_unit'),
-                'cur_nm': item.get('cur_nm'),
-                'ttb': item.get('ttb'),
-                'tts': item.get('tts'),
-                'deal_bas_r': item.get('deal_bas_r'),
-                'bkpr': item.get('bkpr'),
-                'y_efee_r': item.get('yy_efee_r'),
-                'ten_d_efee_r': item.get('ten_dd_efee_r'),
-                'kftc_deal_bas_r': item.get('kftc_deal_bas_r'),
-                'kftc_bkpr': item.get('kftc_bkpr'),
-                'date': datetime.today().date()
-            })
-            if serializer.is_valid():
-                ExchangeRate.objects.update_or_create(
-                    cur_unit=item.get('cur_unit'),
-                    date=datetime.today().date(),
-                    defaults=serializer.validated_data
-                )
+        quotes = data.get('quotes', {})
 
-        return Response({'message': '오늘의 환율 데이터 저장 완료'}, status=status.HTTP_200_OK)
+        if not quotes:
+            return Response({'error': 'quotes가 비어 있음', 'raw': data}, status=204)
+
+        for key, rate in quotes.items():
+            if not key.startswith('KRW'):
+                continue
+            target_currency = key[3:]
+            unit_rate = round(1 / rate, 4) if rate else None
+            currency_name = CURRENCY_NAME_MAP.get(target_currency, '')
+
+            ExchangeRate.objects.update_or_create(
+                date=date_obj,
+                base_currency='KRW',
+                target_currency=target_currency,
+                defaults={
+                    'rate': rate,
+                    'unit_rate': unit_rate,
+                    'currency_name': currency_name,
+                }
+            )
+
+        return Response({'message': f'{date_obj} 환율 저장 완료'}, status=status.HTTP_200_OK)
 
 
 # 환율 메모 CRUD
@@ -119,10 +146,10 @@ class ExchangeRateOverviewView(APIView):
     def get(self, request, cur_unit):
         user = request.user
         today = datetime.today().date()
-        start = today - timedelta(days=6)  # 오늘 포함 7일간
+        start = today - timedelta(days=6)  # 최근 7일 (오늘 포함)
 
         rates = ExchangeRate.objects.filter(
-            cur_unit=cur_unit.upper(),
+            target_currency=cur_unit.upper(),
             date__range=(start, today)
         ).order_by('date')
 
@@ -132,22 +159,19 @@ class ExchangeRateOverviewView(APIView):
         history = [
             {
                 "date": r.date.strftime("%Y-%m-%d"),
-                "rate": float(r.deal_bas_r.replace(',', ''))
+                "rate": r.unit_rate
             }
             for r in rates
         ]
 
         today_obj = next((r for r in rates if r.date == today), None)
-        if today_obj:
-            today_data = {
-                "date": today_obj.date.strftime("%Y-%m-%d"),
-                "cur_unit": today_obj.cur_unit,
-                "cur_nm": today_obj.cur_nm,
-                "rate": float(today_obj.deal_bas_r.replace(',', ''))
-            }
-        else:
-            today_data = None  # 오늘 데이터가 없을 수도 있음 (API 실패 등)
-        
+        today_data = {
+            "date": today_obj.date.strftime("%Y-%m-%d"),
+            "cur_unit": today_obj.target_currency,
+            "cur_nm": today_obj.currency_name,
+            "rate": today_obj.unit_rate
+        } if today_obj else None
+
         memos = ExchangeMemo.objects.filter(
             user=user,
             foreign_currency=cur_unit.upper()
@@ -162,45 +186,63 @@ class ExchangeRateOverviewView(APIView):
         })
 
 
-# -----------------------------------test-----------------------------------------
-# class FetchExchangeRateView(APIView):
-#     def get(self, request):
-#         url = "https://www.koreaexim.go.kr/site/program/financial/exchangeJSON"
-#         params = {
-#             'authkey': settings.EXIM_API_KEY,  # settings.py에 설정해둘 것
-#             'searchdate': '20250512',  # 오늘 날짜 기본
-#             'data': 'AP01',
-#         }
+# 특정 날짜 환율 저장 View(응급용)
+class FetchExchangeRatesByDateView(APIView):
+    def get(self, request):
+        date_str = request.query_params.get('date')
+        if not date_str:
+            return Response({'error': 'date 파라미터를 제공해주세요. 예: ?date=2025-05-13'}, status=400)
 
-#         response = requests.get(url, params=params)
-#         if response.status_code != 200:
-#             return Response({'error': 'API 요청 실패'}, status=status.HTTP_502_BAD_GATEWAY)
+        try:
+            datetime.strptime(date_str, '%Y-%m-%d')
+        except ValueError:
+            return Response({'error': '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식을 사용하세요.'}, status=400)
 
-#         data = response.json()
+        base_url = 'https://api.currencylayer.com/historical'
+        currencies = ",".join([
+            "AED", "AUD", "BHD", "BND", "CAD", "CHF", "CNY", "DKK", "EUR", "GBP",
+            "HKD", "IDR", "JPY", "KWD", "MYR", "NOK", "NZD", "SAR", "SEK", "SGD", "THB", "USD"
+        ])
 
-#         # 오류코드 확인
-#         if isinstance(data, dict) and data.get('RESULT') != 1:
-#             return Response({'error': 'API 데이터 오류'}, status=status.HTTP_400_BAD_REQUEST)
+        params = {
+            'access_key': settings.CURRENCYLAYER_API_KEY,
+            'date': date_str,
+            'source': 'KRW',
+            'currencies': currencies
+        }
 
-#         # 기존 데이터 삭제 (선택)
-#         ExchangeRate.objects.all().delete()
+        response = requests.get(base_url, params=params)
+        if response.status_code != 200:
+            return Response({'error': f'API 요청 실패 ({response.status_code})'}, status=502)
 
-#         for item in data:
-#             serializer = ExchangeRateSerializer(data={
-#                 'cur_unit': item.get('cur_unit'),
-#                 'cur_nm': item.get('cur_nm'),
-#                 'ttb': item.get('ttb'),
-#                 'tts': item.get('tts'),
-#                 'deal_bas_r': item.get('deal_bas_r'),
-#                 'bkpr': item.get('bkpr'),
-#                 'y_efee_r': item.get('yy_efee_r'),
-#                 'ten_d_efee_r': item.get('ten_dd_efee_r'),
-#                 'kftc_deal_bas_r': item.get('kftc_deal_bas_r'),
-#                 'kftc_bkpr': item.get('kftc_bkpr'),
-#             })
-#             if serializer.is_valid():
-#                 serializer.save()
-#             else:
-#                 print("유효성 검사 실패:", serializer.errors)
+        data = response.json()
+        quotes = data.get('quotes', {})
+        if not quotes:
+            return Response({'error': 'quotes가 비어 있습니다.', 'raw': data}, status=204)
 
-#         return Response({'message': '환율 정보가 성공적으로 갱신되었습니다.'}, status=status.HTTP_200_OK)
+        try:
+            date_obj = datetime.strptime(data['date'], '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            return Response({'error': f"날짜 파싱 실패: {data.get('date')}"}, status=500)
+
+        saved = 0
+        for key, rate in quotes.items():
+            if not key.startswith('KRW'):
+                continue
+            target_currency = key[3:]
+            unit_rate = round(1 / rate, 4) if rate else None
+            currency_name = CURRENCY_NAME_MAP.get(target_currency, '')
+
+            ExchangeRate.objects.update_or_create(
+                date=date_obj,
+                base_currency='KRW',
+                target_currency=target_currency,
+                defaults={
+                    'rate': rate,
+                    'unit_rate': unit_rate,
+                    'currency_name': currency_name,
+                }
+            )
+            saved += 1
+
+        return Response({'message': f"{date_str} 기준 환율 저장 완료", 'saved': saved}, status=200)
