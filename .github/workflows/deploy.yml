@@ -49,6 +49,18 @@ jobs:
                   secret: maria_db_port
                 - name: GOOGLE_APPLICATION_CREDENTIALS
                   secret: google_application_credentials
+                - name: CURRENCYLAYER_API_KEY
+                  secret: currencylayer_api_key
+                - name: AWS_ACCESS_KEY_ID
+                  secret: aws_access_key_id
+                - name: AWS_SECRET_ACCESS_KEY
+                  secret: aws_secret_access_key
+                - name: AWS_REGION_NAME
+                  secret: aws_region_name
+                - name: AWS_STORAGE_BUCKET_NAME
+                  secret: AWS_STORAGE_BUCKET_NAME
+                - name: AWS_CLOUDFRONT_DOMAIN
+                  secret: AWS_CLOUDFRONT_DOMAIN
               ports: 8000
               start: python3 manage.py runserver 0:8000
               buildenv: []
