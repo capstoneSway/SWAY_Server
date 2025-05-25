@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Board, Comment, Report
+from .models import *
 from mypage.models import BlockUser
 
 class RecursiveSerializer(serializers.Serializer):
@@ -14,17 +14,18 @@ class CommentSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     nickname = serializers.CharField(source='user.nickname', read_only=True)
     profile_image = serializers.URLField(source='user.profile_image', read_only=True)
+    nationality = serializers.CharField(source='user.nationality', read_only=True)
     parent_username = serializers.CharField(source='parent_user.username', read_only=True)
     parent_nickname = serializers.CharField(source='parent_user.nickname', read_only=True)
     like_count = serializers.SerializerMethodField()
     is_blocked = serializers.SerializerMethodField()
     class Meta:
         model = Comment
-        fields = ('id', 'username', 'nickname', 'profile_image', 
+        fields = ('id', 'username', 'nickname', 'profile_image', 'nationality', 
             'board_id', 'date', 'parent_id',
             'parent_username', 'parent_nickname', 'is_blocked', 'content', 'like_count', 'reply')
         read_only_fields = [
-            'id', 'user', 'username', 'nickname', 'profile_image', 'board_id',
+            'id', 'user', 'username', 'nickname', 'profile_image', 'nationality', 'board_id',
             'date', 'parent_username', 'parent_nickname', 'is_blocked',
             'like_count', 'reply'
         ]
@@ -74,15 +75,21 @@ class CommentDetailSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     nickname = serializers.CharField(source='user.nickname', read_only=True)
     profile_image = serializers.URLField(source='user.profile_image', read_only=True)
+    nationality = serializers.CharField(source='user.nationality', read_only=True)
     board_id = serializers.IntegerField(source='board.id', read_only=True)
     parent = serializers.IntegerField(source='parent.id', read_only=True)
     parent_nickname = serializers.CharField(source='parent_user.nickname', read_only=True)
     class Meta:
         model = Comment
-        fields = ('id', 'username','nickname', 'profile_image', 'board_id' ,'date', 'parent', 'parent_nickname', 'content')
+        fields = ('id', 'username','nickname', 'profile_image', 'nationality', 'board_id' ,'date', 'parent', 'parent_nickname', 'content')
         read_only_fields = [
-            'id', 'user', 'username', 'nickname', 'profile_image', 'board_id',
+            'id', 'user', 'username', 'nickname', 'profile_image', 'nationality', 'board_id',
             'date', 'parent_nickname']
+
+class BoardImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BoardImage
+        fields = ['id', 'image']
 
 class BoardSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
@@ -91,11 +98,13 @@ class BoardSerializer(serializers.ModelSerializer):
     scrap_count = serializers.SerializerMethodField()
     nickname = serializers.CharField(source='user.nickname', read_only=True)
     profile_image = serializers.URLField(source='user.profile_image', read_only=True)
-    
+    nationality = serializers.CharField(source='user.nationality', read_only=True)
+    images = BoardImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = Board
-        fields = ['id', 'username', 'nickname', 'profile_image', 'title', 'content', 'image', 'date', 'comment_count', 'like_count', 'scrap_count']
-        read_only_fields = ['id', 'user', 'username', 'nickname', 'profile_image', 'date', 'comment_count', 'like_count', 'scrap_count']
+        fields = ['id', 'username', 'nickname', 'profile_image', 'nationality', 'title', 'content', 'images', 'date', 'comment_count', 'like_count', 'scrap_count']
+        read_only_fields = ['id', 'user', 'username', 'nickname', 'profile_image', 'nationality', 'date', 'comment_count', 'like_count', 'scrap_count']
 
     def get_comment_count(self, obj):
         return obj.comments.count() 

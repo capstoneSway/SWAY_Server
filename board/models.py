@@ -8,10 +8,13 @@ class Board(models.Model):
     title = models.CharField(max_length=100)
     date = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
-    image = models.ImageField(upload_to='board_images/', null=True, blank=True)  # ← 추가
 
     def __str__(self):
         return self.title
+
+class BoardImage(models.Model):
+    board = models.ForeignKey(Board, related_name='images', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='board_images/')
 
 class Comment(models.Model):
     id = models.AutoField(primary_key=True, null=False, blank=False)
