@@ -17,14 +17,15 @@ class CommentSerializer(serializers.ModelSerializer):
     parent_username = serializers.CharField(source='parent_user.username', read_only=True)
     parent_nickname = serializers.CharField(source='parent_user.nickname', read_only=True)
     like_count = serializers.SerializerMethodField()
+    is_blocked = serializers.SerializerMethodField()
     class Meta:
         model = Comment
         fields = ('id', 'username', 'nickname', 'profile_image', 
             'board_id', 'date', 'parent_id',
-            'parent_username', 'parent_nickname', 'content', 'like_count', 'reply')
+            'parent_username', 'parent_nickname', 'is_blocked', 'content', 'like_count', 'reply')
         read_only_fields = [
             'id', 'user', 'username', 'nickname', 'profile_image', 'board_id',
-            'date', 'parent_username', 'parent_nickname',
+            'date', 'parent_username', 'parent_nickname', 'is_blocked',
             'like_count', 'reply'
         ]
 
@@ -35,6 +36,12 @@ class CommentSerializer(serializers.ModelSerializer):
         if request and request.method in ['PUT', 'PATCH']:
             # 수정 요청일 경우 parent 필드를 읽기 전용으로
             self.fields['parent'].read_only = True
+            
+    def get_is_blocked(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return BlockUser.objects.filter(user=request.user, blocked_user=obj.user).exists()
+        return False
 
     def get_like_count(self, obj):
         return obj.likes.count()
@@ -50,6 +57,7 @@ class CommentSerializer(serializers.ModelSerializer):
         serializer = self.__class__(replies, many=True, context=self.context)
         serializer.bind('', self)
         return serializer.data
+        
 
     '''
         def get_reply(self, instance):

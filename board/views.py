@@ -4,7 +4,7 @@ from .permissions import IsOwnerOrReadOnly
 from mypage.models import BlockUser
 from mypage.utils import get_active_restriction
 from django.shortcuts import get_object_or_404
-from rest_framework import filters
+from rest_framework import filters, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.generics import ListAPIView, ListCreateAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView, RetrieveUpdateAPIView, GenericAPIView
@@ -66,14 +66,8 @@ class CommentList(ListCreateAPIView):
 
     def get_queryset(self):
         board_id = self.kwargs['board_id']
-        queryset = Comment.objects.filter(board_id=board_id, parent=None)
+        return Comment.objects.filter(board_id=board_id, parent=None)
 
-        user = self.request.user
-        if user.is_authenticated:
-            blocked_user_ids = BlockUser.objects.filter(user=user).values_list('blocked_user', flat=True)
-            queryset = queryset.exclude(user__in=blocked_user_ids)
-
-        return queryset
     def perform_create(self, serializer):
         restriction = get_active_restriction(self.request.user, 'board_ban')
         if restriction:
@@ -170,3 +164,36 @@ class CommentReportView(CreateAPIView):
         comment = get_object_or_404(Comment, pk=comment_id)
         serializer.save(reporter=self.request.user, comment=comment)
 
+class AddBlockUserView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, board_id):
+        board = get_object_or_404(Board, id=board_id)
+        blocker = request.user
+        blocked = board.user
+
+        if blocker == blocked:
+            return Response({'detail': 'You cannot block yourself.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if BlockUser.objects.filter(user=blocker, blocked_user=blocked).exists():
+            return Response({'detail': 'This user is already blocked.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        BlockUser.objects.create(user=blocker, blocked_user=blocked)
+        return Response({'detail': f'{blocked.nickname} has been blocked successfully.'}, status=status.HTTP_201_CREATED)
+
+class AddBlockCommentUserView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, comment_id):
+        comment = get_object_or_404(Comment, id=comment_id)
+        blocker = request.user
+        blocked = comment.user
+
+        if blocker == blocked:
+            return Response({'detail': 'You cannot block yourself.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if BlockUser.objects.filter(user=blocker, blocked_user=blocked).exists():
+            return Response({'detail': 'This user is already blocked.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        BlockUser.objects.create(user=blocker, blocked_user=blocked)
+        return Response({'detail': f'{blocked.nickname} has been blocked successfully.'}, status=status.HTTP_201_CREATED)
