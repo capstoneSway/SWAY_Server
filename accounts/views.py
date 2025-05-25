@@ -241,6 +241,14 @@ class SetNationalityView(generics.UpdateAPIView):
 
     def get_object(self):
         return self.request.user
+    
+# 유저 탈퇴
+class DeleteAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        request.user.delete()
+        return Response({'detail': 'Account deleted successfully.'}, status=204)
 
 #==============================================================================
 """
