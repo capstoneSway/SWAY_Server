@@ -10,13 +10,28 @@ class LogoutSerializer(serializers.Serializer):
         'bad_token': "Token is expired or invalid"
     }
 
-    def validate(self, attrs):
-        self.token = attrs['refresh']
-        return attrs
+    # def validate(self, attrs):
+    #     self.token = attrs['refresh']
+    #     return attrs
+
+    # def save(self, **kwargs):
+    #     try:
+    #         RefreshToken(self.token).blacklist()
+    #     except TokenError:
+    #         self.fail('bad_token')
+    
+    def validate_refresh(self, value):
+        try:
+            RefreshToken(value)  # 유효성 검사
+        except TokenError:
+            self.fail('bad_token')
+        return value
 
     def save(self, **kwargs):
+        refresh_token = self.validated_data['refresh']
         try:
-            RefreshToken(self.token).blacklist()
+            token = RefreshToken(refresh_token)
+            token.blacklist()
         except TokenError:
             self.fail('bad_token')
 

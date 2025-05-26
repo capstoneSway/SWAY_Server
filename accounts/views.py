@@ -210,7 +210,7 @@ class LogoutAPIView(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response("Successful Logout", status=status.HTTP_204_NO_CONTENT)
+        return Response("Successfully logged out", status=status.HTTP_204_NO_CONTENT)
 
 
 # 유저 닉네임 중복 체크
