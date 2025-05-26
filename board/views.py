@@ -19,7 +19,7 @@ def notify_on_comment_create(comment):
     parent_comment_user = comment.parent.user if comment.parent else None
 
     # 게시글 작성자 알림 (내가 쓴 글에 댓글 단 경우 제외)
-    if board_owner: #and board_owner != author:
+    if board_owner and board_owner != author:
         message = f"{author.nickname} commented on your post."
         Notification.objects.create(
             user=board_owner,
@@ -39,7 +39,7 @@ def notify_on_comment_create(comment):
         )
 
     # 부모 댓글 작성자 알림 (대댓글일 경우, 자신 제외)
-    if comment.parent and parent_comment_user: # and parent_comment_user != author:
+    if comment.parent and parent_comment_user and parent_comment_user != author:
         message = f"{author.nickname} replied to your comment."
         Notification.objects.create(
             user=parent_comment_user,
