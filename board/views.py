@@ -83,7 +83,8 @@ class CommentList(ListCreateAPIView):
         parent_id = self.request.data.get('parent_id')
         parent = get_object_or_404(Comment, pk=parent_id) if parent_id else None
         parent_user = parent.user if parent else None
-
+        comment = serializer.save(user=self.request.user)
+        notify_on_comment_create(comment)
         serializer.save(user=self.request.user, board=board, parent=parent, parent_user=parent_user)
     
 class CommentDetail(RetrieveUpdateDestroyAPIView):
@@ -145,6 +146,38 @@ class BoardScrapToggleView(GenericAPIView):
         board = get_object_or_404(Board, pk=board_id)
         BoardScrap.objects.filter(user=request.user, board=board).delete()
         return Response({'scrapped': False})
+
+class BoardNotiToggleView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, board_id):
+        board = get_object_or_404(Board, pk=board_id)
+        noti, created = Boardnoti.objects.get_or_create(user=request.user, board=board)
+        if not created:
+            noti.delete()
+            return Response({'notified': False})
+        return Response({'notified': True})
+
+    def delete(self, request, board_id):
+        board = get_object_or_404(Board, pk=board_id)
+        Boardnoti.objects.filter(user=request.user, board=board).delete()
+        return Response({'notified': False})
+    
+class CommentNotiToggleView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, comment_id):
+        comment = get_object_or_404(Comment, pk=comment_id)
+        like, created = CommentLike.objects.get_or_create(user=request.user, comment=comment)
+        if not created:
+            like.delete()
+            return Response({'notified': False})
+        return Response({'notified': True})
+
+    def delete(self, request, comment_id):
+        comment = get_object_or_404(Comment, pk=comment_id)
+        CommentLike.objects.filter(user=request.user, comment=comment).delete()
+        return Response({'notified': False})
     
 class BoardReportView(CreateAPIView):
     serializer_class = ReportSerializer

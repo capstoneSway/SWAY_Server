@@ -51,7 +51,21 @@ class BoardScrap(models.Model):
     class Meta:
         unique_together = ('user', 'board')
 
-#수정예정
+class Boardnoti(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    board = models.ForeignKey(Board, on_delete=models.CASCADE, related_name='boardnoti')
+
+    class Meta:
+        unique_together = ('user', 'board')
+
+class CommentLike(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='commentnoti')
+
+    class Meta:
+        unique_together = ('user', 'comment')
+
+
 class Report(models.Model):
     reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reports')
     board = models.ForeignKey(Board, null=True, blank=True, on_delete=models.CASCADE, related_name='reports')

@@ -19,6 +19,7 @@ urlpatterns = [
     path('<int:board_id>/scrap/', BoardScrapToggleView.as_view()),
     path('<int:board_id>/report/', BoardReportView.as_view(), name='board-report'),
     path('<int:board_id>/comments/<int:comment_id>/report/', CommentReportView.as_view(), name='comment-report'),
+    path('<int:board_id>/noti-toggle/', BoardNotiToggleView.as_view()),
+    path('<int:board_id>/comments/<int:comment_id>/noti-toggle/', CommentNotiToggleView.as_view()),
 
-
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
