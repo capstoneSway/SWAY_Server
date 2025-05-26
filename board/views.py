@@ -4,13 +4,59 @@ from .permissions import IsOwnerOrReadOnly
 from mypage.models import BlockUser
 from mypage.utils import get_active_restriction
 from django.shortcuts import get_object_or_404
+from noti.models import Notification
+from utils import fcm
 from rest_framework import filters, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.generics import ListAPIView, ListCreateAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView, RetrieveUpdateAPIView, GenericAPIView
 from rest_framework.response import Response
 
+#댓글 알림 함수
+def notify_on_comment_create(comment):
+    author = comment.user
+    board_owner = comment.board.user
+    parent_comment_user = comment.parent.user if comment.parent else None
 
+    # 게시글 작성자 알림 (내가 쓴 글에 댓글 단 경우 제외)
+    if board_owner: #and board_owner != author:
+        message = f"{author.nickname} commented on your post."
+        Notification.objects.create(
+            user=board_owner,
+            type='board',
+            board=comment.board,
+            message=message
+        )
+        fcm(
+            user=board_owner,
+            title="New Comment",
+            body=message,
+            data={
+                "type": "comment",
+                "board_id": str(comment.board.id),
+                "comment_id": str(comment.id)
+            }
+        )
+
+    # 부모 댓글 작성자 알림 (대댓글일 경우, 자신 제외)
+    if comment.parent and parent_comment_user: # and parent_comment_user != author:
+        message = f"{author.nickname} replied to your comment."
+        Notification.objects.create(
+            user=parent_comment_user,
+            type='comment',
+            board=comment.board,
+            message=message
+        )
+        fcm(
+            user=parent_comment_user,
+            title="New Reply",
+            body=message,
+            data={
+                "type": "reply",
+                "board_id": str(comment.board.id),
+                "comment_id": str(comment.id)
+            }
+        )
 
 class BoardList(ListAPIView):
     queryset = Board.objects.all()
