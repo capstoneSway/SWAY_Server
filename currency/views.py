@@ -16,7 +16,7 @@ from .currency_name import CURRENCY_NAME_MAP
 # 최근 14일 환율 저장 View
 class FetchInitialExchangeRatesView(APIView):
     def get(self, request):
-        base_url = 'https://api.exchangerate.host/historical'  # 또는 currencylayer API 엔드포인트
+        base_url = 'https://api.exchangerate.host/historical'
         today = datetime.today()
         days = [today - timedelta(days=i) for i in reversed(range(14))]
 
@@ -78,7 +78,7 @@ class FetchInitialExchangeRatesView(APIView):
 # 매일 환율 저장 View
 class FetchTodayExchangeRatesView(APIView):
     def get(self, request):
-        base_url = 'https://api.currencylayer.com/live'
+        base_url = 'https://api.exchangerate.host/live'
         date_obj = datetime.today().date()
         currencies = ",".join([
             "AED","AUD","BHD","BND","CAD","CHF","CNY","DKK","EUR","GBP",
@@ -198,7 +198,7 @@ class FetchExchangeRatesByDateView(APIView):
         except ValueError:
             return Response({'error': '날짜 형식이 올바르지 않습니다. YYYY-MM-DD 형식을 사용하세요.'}, status=400)
 
-        base_url = 'https://api.currencylayer.com/historical'
+        base_url = 'https://api.exchangerate.host/historical'
         currencies = ",".join([
             "AED", "AUD", "BHD", "BND", "CAD", "CHF", "CNY", "DKK", "EUR", "GBP",
             "HKD", "IDR", "JPY", "KWD", "MYR", "NOK", "NZD", "SAR", "SEK", "SGD", "THB", "USD"
