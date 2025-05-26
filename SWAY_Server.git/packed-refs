@@ -1,0 +1,6 @@
+# pack-refs with: peeled fully-peeled sorted 
+a5ac92459e9e3c6485ca51ee7e45106c9ecb5e44 refs/heads/feat/currency
+fcc9b769f56bc83fbdb487e2fe533c6e2e56ecc2 refs/heads/main
+12f9c4c8584e995fcfacc3f517ac610012ff7143 refs/pull/1/head
+0e7422322f68c3826e746b6b8b1289cc47e4a5c9 refs/pull/2/head
+a5ac92459e9e3c6485ca51ee7e45106c9ecb5e44 refs/pull/3/head
