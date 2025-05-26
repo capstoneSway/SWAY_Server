@@ -50,7 +50,7 @@ jobs:
                 - name: GOOGLE_APPLICATION_CREDENTIALS
                   secret: google_application_credentials
                 - name: CURRENCYLAYER_API_KEY
-                  secret: currencylayer_api_key
+                  secret: exchangerate_key
                 - name: AWS_ACCESS_KEY_ID
                   secret: aws_access_key_id
                 - name: AWS_SECRET_ACCESS_KEY
