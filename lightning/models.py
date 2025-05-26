@@ -1,6 +1,10 @@
 from django.db import models
 # from django.contrib.auth.models import User
+from datetime import timezone, timedelta
 from django.conf import settings
+
+def get_default_end_time():
+    return timezone.now() + timedelta(days=1)
 
 class Lightning(models.Model):
     class Status(models.TextChoices):
@@ -14,12 +18,13 @@ class Lightning(models.Model):
         EXERCISE = 'exercise', '운동'
         ELSE = 'else', '기타'
 
+
     # host = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hosted_meetups')
     host = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='hosted_meetups')
     title = models.CharField(max_length=100)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    end_time = models.DateTimeField()
+    end_time = models.DateTimeField(default=get_default_end_time)
     current_participant = models.IntegerField(default=0)
     max_participant = models.IntegerField()
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.IN_PROGRESS)
