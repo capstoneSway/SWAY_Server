@@ -1,6 +1,6 @@
 from django.db import models
-# from django.contrib.auth.models import User
-from datetime import timezone, timedelta
+from django.utils import timezone
+from datetime import timedelta
 from django.conf import settings
 
 def get_default_end_time():
@@ -13,13 +13,16 @@ class Lightning(models.Model):
         CANCELED = 'canceled', '취소'
 
     class Category(models.TextChoices):
-        TOUR = 'tour', '여행'
-        EATING = 'eating', '맛집'
-        EXERCISE = 'exercise', '운동'
-        ELSE = 'else', '기타'
+        TRAVEL = 'travel', '여행'
+        FOODIE = 'foodie', '맛집'
+        WORKOUT = 'workout', '운동'
+        OTHERS = 'others', '기타'
 
+    class Gender(models.TextChoices):
+        ALL = 'all', '모두'
+        MALE = 'male', '남자만'
+        FEMALE = 'female', '여자만'
 
-    # host = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hosted_meetups')
     host = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='hosted_meetups')
     title = models.CharField(max_length=100)
     content = models.TextField()
@@ -28,7 +31,8 @@ class Lightning(models.Model):
     current_participant = models.IntegerField(default=0)
     max_participant = models.IntegerField()
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.IN_PROGRESS)
-    category = models.CharField(max_length=10, choices=Category.choices)
+    category = models.CharField(max_length=10, choices=Category.choices, default=Category.TRAVEL)
+    gender = models.CharField(max_length=10, choices=Gender.choices, default=Gender.ALL)
     background_pic = models.CharField(max_length=255, blank=True)
     like = models.IntegerField(default=0)
     participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='joined_lightnings', blank=True)
