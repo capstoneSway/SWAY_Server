@@ -14,7 +14,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from accounts.models import User
 from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import LogoutSerializer, NicknameSerializer, NationalitySerializer, ProfileSerializer, ProfileUpdateSerializer
+from .serializers import LogoutSerializer, NicknameSerializer, NationalitySerializer, ProfileUpdateSerializer
 
 
 # 환경변수 파일 관련 설정
