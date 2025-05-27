@@ -196,6 +196,16 @@ class ExchangeRateOverviewView(APIView):
             "memos": serialized_memos,
         })
 
+# 유저 환율 메모 조회 View
+class UserExchangeMemoListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        memos = ExchangeMemo.objects.filter(user=user).order_by('-date')
+        serialized_memos = ExchangeMemoSerializer(memos, many=True).data
+
+        return Response({"memos": serialized_memos})
 
 # 특정 날짜 환율 저장 View(응급용)
 class FetchExchangeRatesByDateView(APIView):
