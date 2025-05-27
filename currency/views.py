@@ -185,7 +185,7 @@ class ExchangeRateOverviewView(APIView):
 
         memos = ExchangeMemo.objects.filter(
             user=user,
-            foreign_currency=cur_unit.upper()
+            from_currency=cur_unit.upper()
         ).order_by('-date')
 
         serialized_memos = ExchangeMemoSerializer(memos, many=True).data
