@@ -18,10 +18,10 @@ def get_user(validated_token):
     except User.DoesNotExist:
         return AnonymousUser()
 
-# ✅ 테스트 유저 주입 함수
-@database_sync_to_async
-def get_test_user():
-    return User.objects.get(email="test@test.com")
+# # ✅ 테스트 유저 주입 함수
+# @database_sync_to_async
+# def get_test_user():
+#     return User.objects.get(email="test@test.com")
 
 class JWTAuthMiddleware(BaseMiddleware):
     async def __call__(self, scope, receive, send):
@@ -40,8 +40,8 @@ class JWTAuthMiddleware(BaseMiddleware):
             except (InvalidToken, TokenError, KeyError, ValueError):
                 scope['user'] = AnonymousUser()
         else:
-            # scope['user'] = AnonymousUser()
+            scope['user'] = AnonymousUser()
             # ✅ JWT가 없으면 테스트 유저로 강제 지정
-            scope['user'] = await get_test_user()  # ⚠️ 반드시 "test@test.com" 유저가 DB에 있어야 함
+            # scope['user'] = await get_test_user()  # ⚠️ 반드시 "test@test.com" 유저가 DB에 있어야 함
 
         return await super().__call__(scope, receive, send)

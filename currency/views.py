@@ -118,6 +118,17 @@ class FetchTodayExchangeRatesView(APIView):
                     'currency_name': currency_name,
                 }
             )
+        
+        ExchangeRate.objects.update_or_create(
+            date=date_obj,
+            base_currency='KRW',
+            target_currency='KRW',
+            defaults={
+                'rate': 1.0,
+                'unit_rate': 1.0,
+                'currency_name': '대한민국 원화',
+            }
+        )
 
         return Response({'message': f'{date_obj} 환율 저장 완료'}, status=status.HTTP_200_OK)
 
@@ -174,7 +185,7 @@ class ExchangeRateOverviewView(APIView):
 
         memos = ExchangeMemo.objects.filter(
             user=user,
-            foreign_currency=cur_unit.upper()
+            from_currency=cur_unit.upper()
         ).order_by('-date')
 
         serialized_memos = ExchangeMemoSerializer(memos, many=True).data
@@ -185,6 +196,16 @@ class ExchangeRateOverviewView(APIView):
             "memos": serialized_memos,
         })
 
+# 유저 환율 메모 조회 View
+class UserExchangeMemoListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        memos = ExchangeMemo.objects.filter(user=user).order_by('-date')
+        serialized_memos = ExchangeMemoSerializer(memos, many=True).data
+
+        return Response({"memos": serialized_memos})
 
 # 특정 날짜 환율 저장 View(응급용)
 class FetchExchangeRatesByDateView(APIView):

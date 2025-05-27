@@ -44,3 +44,8 @@ class NationalitySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['nationality']
+
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['profile_image']

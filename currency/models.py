@@ -18,9 +18,10 @@ class ExchangeRate(models.Model):
 class ExchangeMemo(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
-    foreign_currency = models.CharField(max_length=10)
-    foreign_amount = models.FloatField()
-    krw_amount = models.FloatField()
+    from_currency = models.CharField(max_length=10)
+    from_amount = models.FloatField()
+    to_currency = models.CharField(max_length=10)
+    to_amount = models.FloatField()
     exchange_rate = models.FloatField()
     date = models.DateField(auto_now_add=True)
 
