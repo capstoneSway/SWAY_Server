@@ -8,7 +8,8 @@ from .views import (KakaoLoginView,
                     SetNicknameView,
                     SetNationalityView,
                     CookieTokenRefreshView,
-                    DeleteAccountView)
+                    DeleteAccountView,
+                    ProfileUpdateView)
 
 #app_name = 'accounts'
 
@@ -22,4 +23,6 @@ urlpatterns = [
     path('set-nickname/', SetNicknameView.as_view(), name='set-nickname'),
     path('set-nationality/', SetNationalityView.as_view(), name='set-nationality'),
     path('delete-account/', DeleteAccountView.as_view(), name='delete-account'),   
+    path('user/info/image-update/', ProfileUpdateView.as_view(), name='profile-image-update'),
+
 ]

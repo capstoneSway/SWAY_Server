@@ -14,7 +14,7 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from accounts.models import User
 from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import LogoutSerializer, NicknameSerializer, NationalitySerializer
+from .serializers import LogoutSerializer, NicknameSerializer, NationalitySerializer, ProfileSerializer, ProfileUpdateSerializer
 
 
 # 환경변수 파일 관련 설정
@@ -249,6 +249,14 @@ class DeleteAccountView(APIView):
     def delete(self, request):
         request.user.delete()
         return Response({'detail': 'Account deleted successfully.'}, status=204)
+
+#프로필 이미지 업데이트
+class ProfileUpdateView(generics.UpdateAPIView):
+    serializer_class = ProfileUpdateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
 
 #==============================================================================
 """
