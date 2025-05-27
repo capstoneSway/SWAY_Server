@@ -21,6 +21,14 @@ class LightningDetail(generics.RetrieveAPIView):
     serializer_class = LightningDetailSerializer
     permission_classes = [permissions.AllowAny]
 
+# 카테고리별 조회 (모든 사용자 가능)
+class LightningCategoryFilterView(APIView):
+    def get(self, request):
+        category = request.query_params.get('category')
+        queryset = Lightning.objects.filter(category=category)
+        serializer = LightningSerializer(queryset, many=True)
+        return Response(serializer.data)
+
 # 생성 (로그인된 사용자만 가능)
 class LightningCreate(generics.CreateAPIView):
     queryset = Lightning.objects.all()
