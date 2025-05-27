@@ -1,6 +1,6 @@
 from rest_framework import generics, permissions
 from .models import Lightning
-from .serializers import LightningSerializer
+from .serializers import LightningSerializer, LightningDetailSerializer
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -15,6 +15,12 @@ class LightningList(generics.ListAPIView):
     serializer_class = LightningSerializer
     permission_classes = [permissions.AllowAny]
 
+# 상세 조회 (모든 사용자 가능)
+class LightningDetail(generics.RetrieveAPIView):
+    queryset = Lightning.objects.all()
+    serializer_class = LightningDetailSerializer
+    permission_classes = [permissions.AllowAny]
+
 # 생성 (로그인된 사용자만 가능)
 class LightningCreate(generics.CreateAPIView):
     queryset = Lightning.objects.all()
@@ -26,12 +32,6 @@ class LightningCreate(generics.CreateAPIView):
         lightning.participants.add(self.request.user)
         lightning.current_participant = lightning.participants.count()
         lightning.save() # 주최자는 현재 로그인한 유저
-
-# 상세 조회 (모든 사용자 가능)
-class LightningDetail(generics.RetrieveAPIView):
-    queryset = Lightning.objects.all()
-    serializer_class = LightningSerializer
-    permission_classes = [permissions.AllowAny]
 
 # 수정 (로그인 + 작성자 본인만 가능)
 class LightningUpdate(generics.UpdateAPIView):
