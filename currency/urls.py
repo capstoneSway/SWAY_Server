@@ -11,6 +11,6 @@ urlpatterns = [
     path('fetch/daily/', FetchTodayExchangeRatesView.as_view(), name='fetch-daily'),
     path('overview/<str:cur_unit>/', ExchangeRateOverviewView.as_view(), name='currency-overview'),
     path('memo/', ExchangeMemoCreateView.as_view(), name='memo-create'),
-    path('memo/<int:id>/', ExchangeMemoDeleteView.as_view(), name='memo-delete'),
+    path('memo/<int:id>/delete/', ExchangeMemoDeleteView.as_view(), name='memo-delete'),
     path('fetch/by-date/', FetchExchangeRatesByDateView.as_view(), name='fetch_by_date'),
 ]
