@@ -38,14 +38,14 @@ class ChatImageUploadView(APIView):
         if not image:
             return Response({'error': 'No image provided'}, status=400)
         
-        # ✅ 테스트 중에는 강제 유저 지정
-        test_user = User.objects.get(email="test@test.com")
+        # # ✅ 테스트 중에는 강제 유저 지정
+        # test_user = User.objects.get(email="test@test.com")
 
         # 메시지 저장
         chat_message = LiveChatMessage.objects.create(
             room=room,
-            # sender=request.user,
-            sender=test_user, # ✅ 테스트 유저
+            sender=request.user,
+            # sender=test_user, # ✅ 테스트 유저
             picture=image
         )
 
