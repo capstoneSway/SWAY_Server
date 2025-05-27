@@ -15,5 +15,5 @@ urlpatterns = [
     path('<int:pk>/update/', LightningUpdate.as_view(), name='meetup-update'),
     path('<int:pk>/delete/', LightningDelete.as_view(), name='meetup-delete'),
     path('<int:pk>/join/', JoinLightning.as_view(), name='lightning-join'),
-    path('leave/<int:pk>/', LeaveLightning.as_view(), name='leave-lightning'),
+    path('<int:pk>/leave/', LeaveLightning.as_view(), name='leave-lightning'),
 ]

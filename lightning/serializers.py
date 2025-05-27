@@ -8,7 +8,7 @@ class LightningSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lightning
         fields = '__all__'
-        read_only_fields = ['id', 'host', 'created_at', 'current_participant']
+        read_only_fields = ['id', 'host', 'created_at']
 
 class LightningDetailSerializer(serializers.ModelSerializer):
     host = serializers.StringRelatedField(read_only=True)
