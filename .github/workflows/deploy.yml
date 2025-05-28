@@ -61,6 +61,10 @@ jobs:
                   secret: AWS_STORAGE_BUCKET_NAME
                 - name: AWS_CLOUDFRONT_DOMAIN
                   secret: AWS_CLOUDFRONT_DOMAIN
+                - name: REDIS_HOST
+                  secret: redis_host
+                - name: REDIS_PORT
+                  secret: redis_port
               ports: 8000
               start: python3 manage.py runserver 0:8000
               buildenv: []
