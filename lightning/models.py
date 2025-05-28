@@ -29,6 +29,7 @@ class Lightning(models.Model):
         FEMALE = 'female', '여자만'
 
     host = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='hosted_meetups')
+    is_active = models.BooleanField(default=True)
     title = models.CharField(max_length=100)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -45,6 +46,13 @@ class Lightning(models.Model):
 
     def __str__(self):
         return self.title
+    
+    def update_status(self):
+        if self.current_participant >= self.max_participant:
+            self.status = self.Status.DONE
+        else:
+            self.status = self.Status.IN_PROGRESS
+        self.save()
 
 class LightningParticipation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
