@@ -29,7 +29,7 @@ class Lightning(models.Model):
         FEMALE = 'female', '여자만'
 
     host = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='hosted_meetups')
-    is_active = models.BooleanField(default=True, null=True)
+    # is_active = models.BooleanField(default=True, null=True)
     title = models.CharField(max_length=100)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)

@@ -11,13 +11,13 @@ from noti.models import Notification
 
 # 전체 목록 조회 (모든 사용자 가능)
 class LightningList(generics.ListAPIView):
-    queryset = Lightning.objects.filter(is_active=True)
+    queryset = Lightning.objects.all()
     serializer_class = LightningSerializer
     permission_classes = [permissions.AllowAny]
 
 # 상세 조회 (모든 사용자 가능)
 class LightningDetail(generics.RetrieveAPIView):
-    queryset = Lightning.objects.filter(is_active=True)
+    queryset = Lightning.objects.all()
     serializer_class = LightningDetailSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -25,7 +25,7 @@ class LightningDetail(generics.RetrieveAPIView):
 class LightningCategoryFilterView(APIView):
     def get(self, request):
         category = request.query_params.get('category')
-        queryset = Lightning.objects.filter(category=category, is_active=True)
+        queryset = Lightning.objects.filter(category=category)
         serializer = LightningSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -33,7 +33,7 @@ class LightningCategoryFilterView(APIView):
 class LightningStatusFilterView(APIView):
     def get(self, request):
         status = request.query_params.get('status')
-        queryset = Lightning.objects.filter(status=status, is_active=True)
+        queryset = Lightning.objects.filter(status=status)
         serializer = LightningSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -194,7 +194,7 @@ class CurrentLightningView(APIView):
 
     def get(self, request):
         user = request.user
-        participations = LightningParticipation.objects.filter(user=user, is_active=True)
+        participations = LightningParticipation.objects.filter(user=user)
         serializer = LightningParticipationSerializer(participations, many=True)
         return Response(serializer.data)
 
@@ -205,7 +205,7 @@ class HostedLightningView(APIView):
     def get(self, request):
         user = request.user
         participations = LightningParticipation.objects.filter(
-            user=user, relation_tag=Tag.HOSTED, is_active=True
+            user=user, relation_tag=Tag.HOSTED
         )
         serializer = LightningParticipationSerializer(participations, many=True)
         return Response(serializer.data)
@@ -217,7 +217,7 @@ class ParticipatedLightningView(APIView):
     def get(self, request):
         user = request.user
         participations = LightningParticipation.objects.filter(
-            user=user, relation_tag=Tag.PARTICIPATED, is_active=True
+            user=user, relation_tag=Tag.PARTICIPATED
         )
         serializer = LightningParticipationSerializer(participations, many=True)
         return Response(serializer.data)
