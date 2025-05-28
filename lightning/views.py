@@ -33,7 +33,7 @@ class LightningCategoryFilterView(APIView):
 class LightningStatusFilterView(APIView):
     def get(self, request):
         status = request.query_params.get('status')
-        queryset = Lightning.objects.filter(category=status)
+        queryset = Lightning.objects.filter(status=status)
         serializer = LightningSerializer(queryset, many=True)
         return Response(serializer.data)
 
