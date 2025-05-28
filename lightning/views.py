@@ -90,6 +90,7 @@ class JoinLightning(APIView):
         lightning.current_participant += 1
         lightning.save()
 
+        # 알림 생성: 참가자가 번개 모임에 참가했음을 호스트에게 알림
         Notification.objects.create(
             user = lightning.host,
             type = "번개모임",
@@ -107,14 +108,20 @@ class LeaveLightning(APIView):
         lightning = get_object_or_404(Lightning, pk=pk)
         user = request.user
 
+        # 호스트는 참가 취소 불가 (삭제만 가능)
+        if lightning.host == user:
+            raise ValidationError("호스트는 참가 취소할 수 없습니다. 번개를 삭제해주세요.")
+
+        # 참가 여부 확인
         if not lightning.participants.filter(id=user.id).exists():
             raise ValidationError("참가하지 않은 번개입니다.")
 
+        # 참가 취소 로직
         lightning.participants.remove(user)
         lightning.current_participant -= 1
         lightning.save()
 
-        # 알림 생성: 참가자가 취소했음을 호스트에게
+        # 알림 : 호스트에게 참가 취소 알림
         Notification.objects.create(
             user=lightning.host,
             type='번개모임',
