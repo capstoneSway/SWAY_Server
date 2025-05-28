@@ -1,5 +1,5 @@
 from rest_framework import generics, permissions
-from .models import Lightning, LightningParticipation
+from .models import Lightning, LightningParticipation, Tag
 from .serializers import LightningSerializer, LightningDetailSerializer, ParticipantSerializer, LightningParticipationSerializer
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
@@ -49,6 +49,14 @@ class LightningCreate(generics.CreateAPIView):
         lightning.current_participant = lightning.participants.count()
         lightning.save() # 주최자는 현재 로그인한 유저
 
+        LightningParticipation.objects.create(
+        user=self.request.user,
+        lightning=lightning,
+        relation_tag=Tag.HOSTED
+    )
+
+    
+
 # 수정 (로그인 + 작성자 본인만 가능)
 class LightningUpdate(generics.UpdateAPIView):
     queryset = Lightning.objects.all()
@@ -56,8 +64,18 @@ class LightningUpdate(generics.UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_update(self, serializer):
-        if self.request.user != self.get_object().host:
+        lightning = self.get_object()
+
+        if self.request.user != lightning.host:
             raise PermissionDenied("수정 권한이 없습니다.")
+
+        new_max = serializer.validated_data.get('max_participant', lightning.max_participant)
+
+        if new_max < lightning.current_participant:
+            raise ValidationError(
+                f"현재 참여 중인 인원({lightning.current_participant})보다 적게 설정할 수 없습니다."
+            )
+
         serializer.save()
 
 # 삭제 (로그인 + 작성자 본인만 가능)
@@ -98,6 +116,15 @@ class JoinLightning(APIView):
         lightning.current_participant += 1
         lightning.save()
 
+        participation, created = LightningParticipation.objects.get_or_create(
+            user=user,
+            lightning=lightning,
+            defaults={'relation_tag': Tag.PARTICIPATED}
+        )
+        if not created:
+            participation.relation_tag = Tag.PARTICIPATED
+            participation.save()
+
         # 알림 생성: 참가자가 번개 모임에 참가했음을 호스트에게 알림
         # Notification.objects.create(
         #     user = lightning.host,
@@ -134,6 +161,11 @@ class LeaveLightning(APIView):
         lightning.participants.remove(user)
         lightning.current_participant -= 1
         lightning.save()
+
+        participation = LightningParticipation.objects.filter(user=user, lightning=lightning).first()
+        if participation:
+            participation.relation_tag = Tag.IRRELEVANT
+            participation.save()
 
         # 알림 : 호스트에게 참가 취소 알림
         # Notification.objects.create(
