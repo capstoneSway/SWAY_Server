@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     LightningList, LightningCreate, LightningDetail,
     LightningUpdate, LightningDelete, JoinLightning, LeaveLightning,
-    LightningCategoryFilterView, LightningStatusFilterView
+    LightningCategoryFilterView, LightningStatusFilterView,
+    CurrentLightningView
 )
 
 app_name = 'lightning'
@@ -17,4 +18,5 @@ urlpatterns = [
     path('<int:pk>/delete/', LightningDelete.as_view(), name='meetup-delete'),
     path('<int:pk>/join/', JoinLightning.as_view(), name='lightning-join'),
     path('<int:pk>/leave/', LeaveLightning.as_view(), name='leave-lightning'),
+    path('current/', CurrentLightningView.as_view(), name='current-lightning'),
 ]

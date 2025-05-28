@@ -1,13 +1,13 @@
 from rest_framework import generics, permissions
-from .models import Lightning
-from .serializers import LightningSerializer, LightningDetailSerializer, ParticipantSerializer
+from .models import Lightning, LightningParticipation
+from .serializers import LightningSerializer, LightningDetailSerializer, ParticipantSerializer, LightningParticipationSerializer
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
-from noti.models import Notification, NotificationType
+from noti.models import Notification
 
 # 전체 목록 조회 (모든 사용자 가능)
 class LightningList(generics.ListAPIView):
@@ -150,3 +150,13 @@ class LeaveLightning(APIView):
             "message": "참가가 취소되었습니다.",
             "participants": serialized_participants
             }, status=200)
+
+# 로그인한 사용자의 Current View
+class CurrentLightningView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        participations = LightningParticipation.objects.filter(user=user)
+        serializer = LightningParticipationSerializer(participations, many=True)
+        return Response(serializer.data)
