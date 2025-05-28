@@ -41,7 +41,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'chat_message',
                 'message': message,
-                'sender': sender.nickname or sender.email
+                'sender': {
+                    'nickname': sender.nickname,
+                    'profile_image': sender.profile_image,
+                }
             }
         )
 
