@@ -99,11 +99,11 @@ class JoinLightning(APIView):
         lightning.save()
 
         # 알림 생성: 참가자가 번개 모임에 참가했음을 호스트에게 알림
-        Notification.objects.create(
-            user = lightning.host,
-            type = "번개모임",
-            event = f"{user.username}님이 [{lightning.title}] 번개에 참가했어요."
-        )
+        # Notification.objects.create(
+        #     user = lightning.host,
+        #     type = "번개모임",
+        #     event = f"{user.username}님이 [{lightning.title}] 번개에 참가했어요."
+        # )
 
         participants = lightning.participants.all()
         serialized_participants = ParticipantSerializer(participants, many=True).data
@@ -136,12 +136,12 @@ class LeaveLightning(APIView):
         lightning.save()
 
         # 알림 : 호스트에게 참가 취소 알림
-        Notification.objects.create(
-            user=lightning.host,
-            type='번개모임',
-            event=lightning,
-            message=f"{user.username}님이 [{lightning.title}] 번개 참가를 취소했어요.",
-        )
+        # Notification.objects.create(
+        #     user=lightning.host,
+        #     type='번개모임',
+        #     event=lightning,
+        #     message=f"{user.username}님이 [{lightning.title}] 번개 참가를 취소했어요.",
+        # )
 
         participants = lightning.participants.all()
         serialized_participants = ParticipantSerializer(participants, many=True).data
