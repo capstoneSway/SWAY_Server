@@ -29,6 +29,14 @@ class LightningCategoryFilterView(APIView):
         serializer = LightningSerializer(queryset, many=True)
         return Response(serializer.data)
 
+# 상태별 조회 (모든 사용자 가능)
+class LightningStatusFilterView(APIView):
+    def get(self, request):
+        status = request.query_params.get('status')
+        queryset = Lightning.objects.filter(category=status)
+        serializer = LightningSerializer(queryset, many=True)
+        return Response(serializer.data)
+
 # 생성 (로그인된 사용자만 가능)
 class LightningCreate(generics.CreateAPIView):
     queryset = Lightning.objects.all()
