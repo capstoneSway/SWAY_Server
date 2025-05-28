@@ -12,7 +12,7 @@ class ParticipantSerializer(serializers.ModelSerializer):
 
 class LightningSerializer(serializers.ModelSerializer):
     host = serializers.StringRelatedField(read_only=True)
-    participants = serializers.StringRelatedField(many=True, read_only=True)
+    participants = ParticipantSerializer(many=True, read_only=True)
     
     class Meta:
         model = Lightning
@@ -21,7 +21,7 @@ class LightningSerializer(serializers.ModelSerializer):
 
 class LightningDetailSerializer(serializers.ModelSerializer):
     host = serializers.StringRelatedField(read_only=True)
-    participants = serializers.StringRelatedField(many=True, read_only=True)
+    participants = ParticipantSerializer(many=True, read_only=True)
     
     class Meta:
         model = Lightning
