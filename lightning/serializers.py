@@ -11,7 +11,7 @@ class ParticipantSerializer(serializers.ModelSerializer):
 
 
 class LightningSerializer(serializers.ModelSerializer):
-    host = serializers.StringRelatedField(read_only=True)
+    host = ParticipantSerializer(read_only=True)
     participants = ParticipantSerializer(many=True, read_only=True)
     
     class Meta:
@@ -20,7 +20,7 @@ class LightningSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'host', 'created_at']
 
 class LightningDetailSerializer(serializers.ModelSerializer):
-    host = serializers.StringRelatedField(read_only=True)
+    host = ParticipantSerializer(read_only=True)
     participants = ParticipantSerializer(many=True, read_only=True)
     
     class Meta:
