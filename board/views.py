@@ -5,7 +5,7 @@ from mypage.models import BlockUser
 from mypage.utils import get_active_restriction
 from django.shortcuts import get_object_or_404
 from noti.models import Notification
-from utils.fcm import send_fcm_notification
+from noti.fcm import send_fcm_notification
 from rest_framework import filters, status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
