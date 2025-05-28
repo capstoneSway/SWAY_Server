@@ -7,7 +7,7 @@ User = get_user_model()
 class ParticipantSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email']
+        fields = ['id', 'username', 'email', 'profile_image']
 
 
 class LightningSerializer(serializers.ModelSerializer):
