@@ -6,6 +6,11 @@ from django.conf import settings
 def get_default_end_time():
     return timezone.now() + timedelta(days=1)
 
+class Tag(models.TextChoices):
+    HOSTED = 'hosted', '생성한 채팅방'
+    PARTICIPATED = 'participated', '참가한 채팅방'
+    IRRELEVANT = 'irrelevant', '관련 없음'
+
 class Lightning(models.Model):
     class Status(models.TextChoices):
         IN_PROGRESS = 'inProgress', '모집 중'
@@ -27,15 +32,21 @@ class Lightning(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    meeting_date = models.DateTimeField(blank=False, null=False, default=timezone.now)
     end_time = models.DateTimeField(default=get_default_end_time)
     current_participant = models.IntegerField(default=0)
-    max_participant = models.IntegerField()
+    max_participant = models.IntegerField(default=5)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.IN_PROGRESS)
     category = models.CharField(max_length=10, choices=Category.choices, default=Category.TRAVEL)
     gender = models.CharField(max_length=10, choices=Gender.choices, default=Gender.ALL)
     background_pic = models.CharField(max_length=255, blank=True)
     like = models.IntegerField(default=0)
-    participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='joined_lightnings', blank=True)
+    participants = models.ManyToManyField(settings.AUTH_USER_MODEL, through='LightningParticipation', related_name='joined_lightnings')
 
     def __str__(self):
         return self.title
+
+class LightningParticipation(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    lightning = models.ForeignKey('Lightning', on_delete=models.CASCADE)
+    relation_tag = models.CharField(max_length=20, choices=Tag.choices, default=Tag.IRRELEVANT)
