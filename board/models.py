@@ -58,7 +58,7 @@ class Boardnoti(models.Model):
     class Meta:
         unique_together = ('user', 'board')
 
-class CommentLike(models.Model):
+class Commentnoti(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='commentnoti')
 

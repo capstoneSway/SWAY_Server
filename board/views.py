@@ -214,7 +214,7 @@ class CommentNotiToggleView(GenericAPIView):
 
     def post(self, request, comment_id):
         comment = get_object_or_404(Comment, pk=comment_id)
-        like, created = CommentLike.objects.get_or_create(user=request.user, comment=comment)
+        like, created = Commentnoti.objects.get_or_create(user=request.user, comment=comment)
         if not created:
             like.delete()
             return Response({'notified': False})
