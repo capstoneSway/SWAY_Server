@@ -129,9 +129,9 @@ class CommentList(ListCreateAPIView):
         parent_id = self.request.data.get('parent_id')
         parent = get_object_or_404(Comment, pk=parent_id) if parent_id else None
         parent_user = parent.user if parent else None
-        comment = serializer.save(user=self.request.user)
+        comment = serializer.save(user=self.request.user, board=board, parent=parent, parent_user=parent_user)
         notify_on_comment_create(comment)
-        serializer.save(user=self.request.user, board=board, parent=parent, parent_user=parent_user)
+        
     
 class CommentDetail(RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
@@ -222,7 +222,7 @@ class CommentNotiToggleView(GenericAPIView):
 
     def delete(self, request, comment_id):
         comment = get_object_or_404(Comment, pk=comment_id)
-        CommentLike.objects.filter(user=request.user, comment=comment).delete()
+        Commentnoti.objects.filter(user=request.user, comment=comment).delete()
         return Response({'notified': False})
     
 class BoardReportView(CreateAPIView):
