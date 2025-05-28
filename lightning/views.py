@@ -1,6 +1,6 @@
 from rest_framework import generics, permissions
 from .models import Lightning
-from .serializers import LightningSerializer, LightningDetailSerializer
+from .serializers import LightningSerializer, LightningDetailSerializer, ParticipantSerializer
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -105,7 +105,13 @@ class JoinLightning(APIView):
             event = f"{user.username}님이 [{lightning.title}] 번개에 참가했어요."
         )
 
-        return Response({"message": "참가 신청이 완료되었습니다."})
+        participants = lightning.participants.all()
+        serialized_participants = ParticipantSerializer(participants, many=True).data
+
+        return Response({
+            "message": "참가 신청이 완료되었습니다.", 
+            "participants": serialized_participants
+            }, status=200)
     
 
 # 참가자의 번개 취소
@@ -137,4 +143,10 @@ class LeaveLightning(APIView):
             message=f"{user.username}님이 [{lightning.title}] 번개 참가를 취소했어요.",
         )
 
-        return Response({"message": "참가가 취소되었습니다."})
+        participants = lightning.participants.all()
+        serialized_participants = ParticipantSerializer(participants, many=True).data
+
+        return Response({
+            "message": "참가가 취소되었습니다.",
+            "participants": serialized_participants
+            }, status=200)
