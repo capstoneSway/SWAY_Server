@@ -4,7 +4,7 @@ from channels.db import database_sync_to_async
 from .models import LiveChatRoom, LiveChatMessage
 from lightning.models import Lightning
 from django.contrib.auth import get_user_model
-from ..noti.fcm import send_fcm_notification
+from noti.fcm import send_fcm_notification
 from accounts.models import User
 from asgiref.sync import sync_to_async
 
