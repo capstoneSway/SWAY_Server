@@ -100,11 +100,13 @@ class BoardSerializer(serializers.ModelSerializer):
     profile_image = serializers.URLField(source='user.profile_image', read_only=True)
     nationality = serializers.CharField(source='user.nationality', read_only=True)
     images = BoardImageSerializer(many=True, read_only=True)
+    is_liked = serializers.SerializerMethodField()
+    is_scraped = serializers.SerializerMethodField()
 
     class Meta:
         model = Board
-        fields = ['id', 'username', 'nickname', 'profile_image', 'nationality', 'title', 'content', 'images', 'date', 'comment_count', 'like_count', 'scrap_count']
-        read_only_fields = ['id', 'user', 'username', 'nickname', 'profile_image', 'nationality', 'date', 'comment_count', 'like_count', 'scrap_count']
+        fields = ['id', 'username', 'nickname', 'profile_image', 'nationality', 'title', 'content', 'images', 'date', 'comment_count', 'like_count', 'scrap_count', 'is_liked', 'is_scraped']
+        read_only_fields = ['id', 'user', 'username', 'nickname', 'profile_image', 'nationality', 'date', 'comment_count', 'like_count', 'scrap_count', 'is_liked', 'is_scraped']
 
     def get_comment_count(self, obj):
         return obj.comments.count() 
@@ -114,6 +116,18 @@ class BoardSerializer(serializers.ModelSerializer):
 
     def get_scrap_count(self, obj):
         return obj.scraps.count()
+    
+    def get_is_liked(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return obj.likes.filter(user=user).exists()
+        return False
+
+    def get_is_scraped(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return obj.scraps.filter(user=user).exists()
+        return False
     
 
 class ReportSerializer(serializers.ModelSerializer):
