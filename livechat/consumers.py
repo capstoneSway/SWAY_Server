@@ -13,6 +13,7 @@ from django.contrib.auth.models import AnonymousUser
 User = get_user_model()
 
 class ChatConsumer(AsyncWebsocketConsumer):
+    # WebSocket 연결 요청 처리
     async def connect(self):
         user = self.scope.get('user', None)
         if user is None or isinstance(user, AnonymousUser) or not user.is_authenticated:
@@ -33,21 +34,35 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         await self.accept()
 
+    # WebSocket 연결 종료 처리
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
 
-    async def receive(self, text_data): # 메시지 수신
+    # # 클라이언트로부터 수신한 WebSocket 메시지를 처리
+    async def receive(self, text_data):
         data = json.loads(text_data)
         message = data.get("message", "")
         image_url = data.get("image_url", None)
         sender = self.scope['user']
 
+        # 채팅방 정보 가져오기
         room = await self.get_chat_room(self.lightning_id)
-        await self.create_message(room, sender, message)
-
+        # 메시지 저장
+        chat_message = await self.create_message(room, sender, message)
+        # FCM 푸시 전송 (동기 함수이므로 await 사용 금지)
+        # participants = room.participants.exclude(id=sender.id)
+        participants = await self.get_participants(room, sender)
+        for user in participants:
+            if user.fcm_token:
+                async_to_sync(send_fcm_notification)(
+                    token=user.fcm_token,
+                    title="새 채팅 도착",
+                    body=f"{sender.nickname or sender.email}님의 메시지: {message}"
+                )
+        # 메시지 브로드캐스트
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -61,6 +76,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
+    # 그룹 메시지를 클라이언트에게 전송하는 핸들러
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
             'message': event['message'],
@@ -68,18 +84,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'sender': event['sender']
         }))
 
+    # lightning_id를 기반으로 채팅방 객체를 가져오는 함수
+    # WebSocket 연결 시 채팅방 정보를 조회할 때 사용
     @database_sync_to_async
     def get_chat_room(self, lightning_id):
         return LiveChatRoom.objects.get(lightning_id=lightning_id)
 
+    # 채팅 메시지를 DB에 저장하는 함수
+    # sender가 보낸 텍스트 메시지를 LiveChatMessage 모델에 저장
     @database_sync_to_async
     def create_message(self, room, sender, message):
-        participants = room.participants.exclude(id=sender.id)
-        for user in participants:
-            if user.fcm_token:
-                async_to_sync(send_fcm_notification)(
-                    token=user.fcm_token,
-                    title="새 채팅 도착",
-                    body=f"{sender.nickname or sender.email}님의 메시지: {message}"
-                )
         return LiveChatMessage.objects.create(room=room, sender=sender, message=message)
+
+    # 현재 메시지를 보낸 사용자를 제외한 채팅방 참가자 목록을 가져오는 함수
+    # FCM 푸시 알림 등을 보낼 대상 필터링용
+    @database_sync_to_async
+    def get_participants(self, room, sender):
+        return list(room.participants.exclude(id=sender.id))
