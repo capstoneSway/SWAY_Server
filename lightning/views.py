@@ -92,19 +92,28 @@ class LightningDelete(generics.DestroyAPIView):
         if self.request.user != instance.host:
             raise PermissionDenied("삭제 권한이 없습니다.")
         
-         # 알림 전송: 참가자들에게 번개 취소 알림 (알림 중복 방지 위해 host는 제외)
-        for participant in instance.participants.exclude(id=instance.host.id):
+        # 호스트에게 알림
+        Notification.objects.create(
+            user=instance.host,
+            type='번개모임',
+            event=instance,
+            message=f"[{instance.title}] 번개가 삭제되었어요.",
+        )
+        
+        # 참가자(호스트 제외)들에게 알림
+        participants = instance.participants.exclude(id=instance.host.id)
+        for participant in participants:
             Notification.objects.create(
                 user=participant,
                 type='번개모임',
                 event=instance,
                 message=f"[{instance.title}] 번개가 취소되었어요.",
             )
-            
+
+        # 상태 비활성화 처리
         instance.is_active = False
         instance.status = instance.Status.CANCELED
         instance.save()
-        # instance.delete()
 
 # 참가자의 번개 신청
 class JoinLightning(APIView):
