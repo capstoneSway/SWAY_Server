@@ -41,7 +41,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data): # 메시지 수신
         data = json.loads(text_data)
-        message = data['message']
+        message = data.get("message", "")
+        image_url = data.get("image_url", None)
         sender = self.scope['user']
 
         room = await self.get_chat_room(self.lightning_id)
@@ -52,6 +53,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             {
                 'type': 'chat_message',
                 'message': message,
+                "image_url": image_url,
                 'sender': {
                     'nickname': sender.nickname,
                     'profile_image': sender.profile_image,
@@ -62,6 +64,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         await self.send(text_data=json.dumps({
             'message': event['message'],
+            'image_url': event.get('image_url'),
             'sender': event['sender']
         }))
 
