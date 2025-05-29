@@ -215,7 +215,7 @@ class CurrentLightningView(APIView):
         lightnings = Lightning.objects.filter(
             is_active=True
         ).filter(
-            models.Q(host=user) | models.Q(participants=user)
+            Q(host=user) | Q(participants=user)
         ).distinct()
         serializer = LightningSerializer(lightnings, many=True)
         return Response(serializer.data)
