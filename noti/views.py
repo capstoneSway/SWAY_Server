@@ -6,6 +6,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from accounts.models import User
+from noti.fcm import send_fcm_notification
 
 # 알림 전체 목록 조회 (로그인한 사용자의 알림만)
 class NotificationListView(generics.ListAPIView):
@@ -63,3 +67,20 @@ class DeleteAllNotificationsView(APIView):
     def delete(self, request):
         deleted_count, _ = Notification.objects.filter(user=request.user).delete()
         return Response({"message": f"총 {deleted_count}개의 알림이 삭제되었습니다."})
+
+
+class PushTestView(APIView):
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        user = User.objects.get(id=user_id)
+
+        if not user.fcm_token:
+            return Response({"error": "FCM 토큰이 없습니다."}, status=400)
+
+        send_fcm_notification(
+            token=user.fcm_token,
+            title="테스트 알림",
+            body="테스트 푸시입니다"
+        )
+
+        return Response({"message": "푸시 전송 성공!"})

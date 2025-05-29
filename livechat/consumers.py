@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from noti.fcm import send_fcm_notification
 from accounts.models import User
 from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync
 
 User = get_user_model()
 
@@ -63,7 +64,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         participants = room.participants.exclude(id=sender.id)
         for user in participants:
             if user.fcm_token:
-                send_fcm_notification(
+                async_to_sync(send_fcm_notification)(  # ✅ 여기!
                     token=user.fcm_token,
                     title="새 채팅 도착",
                     body=f"{sender.nickname or sender.email}님의 메시지: {message}"
