@@ -57,7 +57,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         participants = await self.get_participants(room, sender)
         for user in participants:
             if user.fcm_token:
-                async_to_sync(send_fcm_notification)(
+                send_fcm_notification(
                     token=user.fcm_token,
                     title="새 채팅 도착",
                     body=f"{sender.nickname or sender.email}님의 메시지: {message}"
