@@ -141,6 +141,19 @@ class CommentDetail(RetrieveUpdateDestroyAPIView):
         if self.request.method in ['GET', 'PUT', 'PATCH']:
             return CommentDetailSerializer
         return CommentSerializer
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        if instance.is_deleted:
+            return Response({"detail": "This comment has already been deleted."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 소프트 삭제 처리
+        instance.content = "[This comment is deleted.]"
+        instance.is_deleted = True
+        instance.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 

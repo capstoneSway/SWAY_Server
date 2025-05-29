@@ -81,7 +81,7 @@ class CommentDetailSerializer(serializers.ModelSerializer):
     parent_nickname = serializers.CharField(source='parent_user.nickname', read_only=True)
     class Meta:
         model = Comment
-        fields = ('id', 'username','nickname', 'profile_image', 'nationality', 'board_id' ,'date', 'parent', 'parent_nickname', 'content')
+        fields = ('id', 'username','nickname', 'profile_image', 'nationality', 'board_id' ,'date', 'is_deleted', 'parent', 'parent_nickname', 'content')
         read_only_fields = [
             'id', 'user', 'username', 'nickname', 'profile_image', 'nationality', 'board_id',
             'date', 'parent_nickname']
@@ -136,3 +136,10 @@ class ReportSerializer(serializers.ModelSerializer):
         fields = ['id', 'board', 'comment', 'reason', 'created_at']
         read_only_fields = ['id', 'created_at']
 
+    def validate(self, data):
+        board = data.get('board')
+        comment = data.get('comment')
+
+        if not board and not comment:
+            raise serializers.ValidationError("Either board or comment must be provided.")
+        return data
