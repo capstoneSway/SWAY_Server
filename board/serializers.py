@@ -90,9 +90,9 @@ class CommentDetailSerializer(serializers.ModelSerializer):
 class BoardImageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
 
-    def get_picture_url(self, obj):
-        if obj.picture:
-            return f"https://{settings.AWS_CLOUDFRONT_DOMAIN}/{obj.picture.name}"
+    def get_image_url(self, obj):
+        if obj.image:
+            return f"https://{settings.AWS_CLOUDFRONT_DOMAIN}/{obj.image.name}"
         return None
 
     class Meta:
