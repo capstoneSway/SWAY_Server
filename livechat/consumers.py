@@ -8,15 +8,20 @@ from noti.fcm import send_fcm_notification
 from accounts.models import User
 from asgiref.sync import sync_to_async
 from asgiref.sync import async_to_sync
+from django.contrib.auth.models import AnonymousUser
 
 User = get_user_model()
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.user = self.scope['user']
-        if self.user.is_anonymous:
+        user = self.scope.get('user', None)
+        if user is None or isinstance(user, AnonymousUser) or not user.is_authenticated:
+            print("⛔ WebSocket connection refused: Unauthenticated user")
             await self.close()
             return
+
+        self.user = user
+        print(f"✅ WebSocket connected: {self.user.nickname}")
 
         self.lightning_id = self.scope['url_route']['kwargs']['lightning_id']
         self.room_group_name = f'chat_{self.lightning_id}'
