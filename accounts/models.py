@@ -45,6 +45,8 @@ class User(AbstractUser, PermissionsMixin):
     social_type = models.CharField(max_length=30, default="")
     nationality = models.CharField(max_length=50, blank=True, null=True)
 
+    fcm_token = models.CharField(max_length=255, blank=True, null=True)
+    
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
