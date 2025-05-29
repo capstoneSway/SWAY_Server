@@ -13,8 +13,8 @@ User = get_user_model()
 @database_sync_to_async
 def get_user(validated_token):
     try:
-        user_id = validated_token['user_id']
-        return User.objects.get(id=user_id)
+        username = validated_token['username']
+        return User.objects.get(username=username)
     except User.DoesNotExist:
         return AnonymousUser()
 
