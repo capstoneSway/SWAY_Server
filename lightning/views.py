@@ -92,8 +92,8 @@ class LightningDelete(generics.DestroyAPIView):
         if self.request.user != instance.host:
             raise PermissionDenied("삭제 권한이 없습니다.")
         
-         # 알림 전송: 참가자들에게 번개 취소 알림
-        for participant in instance.participants.all():
+         # 알림 전송: 참가자들에게 번개 취소 알림 (알림 중복 방지 위해 host는 제외)
+        for participant in instance.participants.exclude(id=instance.host.id):
             Notification.objects.create(
                 user=participant,
                 type='번개모임',
