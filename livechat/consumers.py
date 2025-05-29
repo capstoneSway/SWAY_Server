@@ -13,6 +13,11 @@ User = get_user_model()
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        self.user = self.scope['user']
+        if self.user.is_anonymous:
+            await self.close()
+            return
+
         self.lightning_id = self.scope['url_route']['kwargs']['lightning_id']
         self.room_group_name = f'chat_{self.lightning_id}'
 
