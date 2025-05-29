@@ -16,7 +16,7 @@ class Board(models.Model):
 
 class BoardImage(models.Model):
     board = models.ForeignKey(Board, related_name='images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='media/board_images/', blank=True, null=True)
+    image = models.ImageField(upload_to='media/board_images/', storage=MediaStorage(),blank=True, null=True)
     
     def delete(self, *args, **kwargs):
         self.image.delete(save=False)  # S3에서도 삭제
