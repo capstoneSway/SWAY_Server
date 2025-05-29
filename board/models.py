@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from SWAY_back.storages import MediaStorage
 
 # Create your models here.
 class Board(models.Model):
@@ -15,7 +16,11 @@ class Board(models.Model):
 
 class BoardImage(models.Model):
     board = models.ForeignKey(Board, related_name='images', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='board_images/', blank=True, null=True)
+    image = models.ImageField(upload_to='media/board_images/', blank=True, null=True)
+    
+    def delete(self, *args, **kwargs):
+        self.image.delete(save=False)  # S3에서도 삭제
+        super().delete(*args, **kwargs)
 
 class Comment(models.Model):
     id = models.AutoField(primary_key=True, null=False, blank=False)
