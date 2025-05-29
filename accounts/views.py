@@ -16,6 +16,10 @@ from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import LogoutSerializer, NicknameSerializer, NationalitySerializer, ProfileUpdateSerializer
 
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 
 # 환경변수 파일 관련 설정
 env = environ.Env(DEBUG=(bool, False))
@@ -258,6 +262,18 @@ class ProfileUpdateView(generics.UpdateAPIView):
     def get_object(self):
         return self.request.user
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_fcm_token(request):
+    user = request.user
+    token = request.data.get('fcm_token')
+
+    if not token:
+        return Response({'error': 'FCM token is required.'}, status=400)
+
+    user.fcm_token = token
+    user.save()
+    return Response({'message': 'FCM token updated successfully.'})
 #==============================================================================
 """
 # 로컬 세팅

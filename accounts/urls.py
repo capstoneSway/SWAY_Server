@@ -10,6 +10,8 @@ from .views import (KakaoLoginView,
                     CookieTokenRefreshView,
                     DeleteAccountView,
                     ProfileUpdateView)
+from django.urls import path
+from .views import update_fcm_token
 
 #app_name = 'accounts'
 
@@ -24,5 +26,5 @@ urlpatterns = [
     path('set-nationality/', SetNationalityView.as_view(), name='set-nationality'),
     path('delete-account/', DeleteAccountView.as_view(), name='delete-account'),   
     path('user/info/image-update/', ProfileUpdateView.as_view(), name='profile-image-update'),
-
+    path('fcm-token/', update_fcm_token, name='update_fcm_token'),
 ]
