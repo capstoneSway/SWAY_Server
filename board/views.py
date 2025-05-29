@@ -149,7 +149,7 @@ class CommentDetail(RetrieveUpdateDestroyAPIView):
             return Response({"detail": "This comment has already been deleted."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 소프트 삭제 처리
-        instance.content = "[This comment is deleted.]"
+        instance.content = "[This comment has been deleted.]"
         instance.is_deleted = True
         instance.save()
 
