@@ -75,5 +75,5 @@ class BlockUserListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = BlockUser
-        fields = ['blocked_user_id', 'nickname', 'created_at']
+        fields = ['id', 'blocked_user_id', 'nickname', 'created_at']
 
