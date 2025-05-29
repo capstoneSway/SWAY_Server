@@ -82,6 +82,7 @@ class BoardCreate(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
+        # ✅ 글쓰기 제한 확인
         restriction = get_active_restriction(self.request.user, 'board_ban')
         if restriction:
             if restriction.release_at:
@@ -90,12 +91,23 @@ class BoardCreate(CreateAPIView):
             else:
                 msg = "You are permanently restricted from creating posts."
             raise PermissionDenied(msg)
-        serializer.save(user=self.request.user)
+        # ✅ 게시글 저장
+        board = serializer.save(user=self.request.user)
+        # ✅ 이미지 저장
+        images = self.request.FILES.getlist('images')
+        for image in images:
+            BoardImage.objects.create(board=board, image=image)
 
 class BoardDetail(RetrieveDestroyAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
     permission_classes = [IsOwnerOrReadOnly]
+
+    def perform_destroy(self, instance):
+        # S3에 연결된 이미지도 삭제
+        for image in instance.images.all():
+            image.delete()
+        instance.delete()
 
 class BoardUpdate(RetrieveUpdateAPIView):
     queryset = Board.objects.all()

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
 from mypage.models import BlockUser
+from django.conf import settings
 
 class RecursiveSerializer(serializers.Serializer):
     def to_representation(self, instance):
@@ -87,9 +88,16 @@ class CommentDetailSerializer(serializers.ModelSerializer):
             'date', 'parent_nickname']
 
 class BoardImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    def get_picture_url(self, obj):
+        if obj.picture:
+            return f"https://{settings.AWS_CLOUDFRONT_DOMAIN}/{obj.picture.name}"
+        return None
+
     class Meta:
         model = BoardImage
-        fields = ['id', 'image']
+        fields = ['id', 'image', 'image_url']
 
 class BoardSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
