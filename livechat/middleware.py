@@ -57,7 +57,7 @@ class JWTAuthMiddleware(BaseMiddleware):
             token = token_list[0]
             try:
                 # 유효성 검증
-                validated_token = UntypedToken(token)
+                validated_token = UntypedToken(token[0])
                 # 사용자 정보 설정
                 scope['user'] = await get_user(validated_token)
             except (InvalidToken, TokenError):
