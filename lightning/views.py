@@ -47,15 +47,15 @@ class LightningCreate(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         lightning = serializer.save(host=self.request.user)
-        lightning.participants.add(self.request.user)
-        lightning.current_participant = lightning.participants.count()
-        lightning.update_status()
 
         LightningParticipation.objects.create(
-        user=self.request.user,
-        lightning=lightning,
-        relation_tag=Tag.HOSTED
-    )
+            user=self.request.user,
+            lightning=lightning,
+            relation_tag=Tag.HOSTED
+        )
+
+        lightning.current_participant = lightning.participants.count()
+        lightning.update_status()
 
     
 
