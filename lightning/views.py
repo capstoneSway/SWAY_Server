@@ -8,16 +8,18 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from noti.models import Notification
+from noti.fcm import send_fcm_notification
+from django.db.models import Q
 
 # 전체 목록 조회 (모든 사용자 가능)
 class LightningList(generics.ListAPIView):
-    queryset = Lightning.objects.all()
+    queryset = Lightning.objects.filter(is_active=True)
     serializer_class = LightningSerializer
     permission_classes = [permissions.AllowAny]
 
 # 상세 조회 (모든 사용자 가능)
 class LightningDetail(generics.RetrieveAPIView):
-    queryset = Lightning.objects.all()
+    queryset = Lightning.objects.filter(is_active=True)
     serializer_class = LightningDetailSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -25,7 +27,7 @@ class LightningDetail(generics.RetrieveAPIView):
 class LightningCategoryFilterView(APIView):
     def get(self, request):
         category = request.query_params.get('category')
-        queryset = Lightning.objects.filter(category=category)
+        queryset = Lightning.objects.filter(category=category, is_active=True)
         serializer = LightningSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -33,7 +35,7 @@ class LightningCategoryFilterView(APIView):
 class LightningStatusFilterView(APIView):
     def get(self, request):
         status = request.query_params.get('status')
-        queryset = Lightning.objects.filter(status=status)
+        queryset = Lightning.objects.filter(status=status, is_active=True)
         serializer = LightningSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -82,7 +84,7 @@ class LightningUpdate(generics.UpdateAPIView):
 
 # 삭제 (로그인 + 작성자 본인만 가능)
 class LightningDelete(generics.DestroyAPIView):
-    queryset = Lightning.objects.all()
+    queryset = Lightning.objects.filter(is_active=True)
     serializer_class = LightningSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -137,6 +139,14 @@ class JoinLightning(APIView):
         #     event = f"{user.username}님이 [{lightning.title}] 번개에 참가했어요."
         # )
 
+        # 푸시 알림 전송: 호스트에게
+        # if lightning.host.fcm_token:
+        #     send_fcm_notification(
+        #         token=lightning.host.fcm_token,
+        #         title="번개 참가 알림",
+        #         body=f"{user.username}님이 [{lightning.title}] 번개에 참가했어요."
+        #     )
+
         participants = lightning.participants.all()
         serialized_participants = ParticipantSerializer(participants, many=True).data
 
@@ -180,6 +190,14 @@ class LeaveLightning(APIView):
         #     message=f"{user.username}님이 [{lightning.title}] 번개 참가를 취소했어요.",
         # )
 
+        # 푸시 알림 전송: 호스트에게
+        # if lightning.host.fcm_token:
+        #     send_fcm_notification(
+        #         token=lightning.host.fcm_token,
+        #         title="번개 참가 취소 알림",
+        #         body=f"{user.username}님이 [{lightning.title}] 번개 참가를 취소했어요."
+        #     )
+
         participants = lightning.participants.all()
         serialized_participants = ParticipantSerializer(participants, many=True).data
 
@@ -194,8 +212,12 @@ class CurrentLightningView(APIView):
 
     def get(self, request):
         user = request.user
-        participations = LightningParticipation.objects.filter(user=user)
-        serializer = LightningParticipationSerializer(participations, many=True)
+        lightnings = Lightning.objects.filter(
+            is_active=True
+        ).filter(
+            models.Q(host=user) | models.Q(participants=user)
+        ).distinct()
+        serializer = LightningSerializer(lightnings, many=True)
         return Response(serializer.data)
 
 
@@ -204,10 +226,8 @@ class HostedLightningView(APIView):
 
     def get(self, request):
         user = request.user
-        participations = LightningParticipation.objects.filter(
-            user=user, relation_tag=Tag.HOSTED
-        )
-        serializer = LightningParticipationSerializer(participations, many=True)
+        lightnings = Lightning.objects.filter(host=user, is_active=True)
+        serializer = LightningSerializer(lightnings, many=True)
         return Response(serializer.data)
 
 
@@ -216,8 +236,9 @@ class ParticipatedLightningView(APIView):
 
     def get(self, request):
         user = request.user
-        participations = LightningParticipation.objects.filter(
-            user=user, relation_tag=Tag.PARTICIPATED
-        )
-        serializer = LightningParticipationSerializer(participations, many=True)
+        lightnings = Lightning.objects.filter(
+            participants=user,  # ManyToManyField 연결 필드
+            is_active=True
+        ).exclude(host=user)  # host는 제외
+        serializer = LightningSerializer(lightnings, many=True)
         return Response(serializer.data)
