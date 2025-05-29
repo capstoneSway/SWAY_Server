@@ -43,7 +43,7 @@ class NicknameSerializer(serializers.ModelSerializer):
 class NationalitySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['nationality']
+        fields = ['nationality', 'national_code']
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:

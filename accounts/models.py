@@ -44,6 +44,7 @@ class User(AbstractUser, PermissionsMixin):
     social_id = models.CharField(max_length=100, unique=True, default="")
     social_type = models.CharField(max_length=30, default="")
     nationality = models.CharField(max_length=50, blank=True, null=True)
+    national_code = models.CharField(max_length=10, blank=True, null=True)
 
     fcm_token = models.CharField(max_length=255, blank=True, null=True)
     
