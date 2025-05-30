@@ -6,7 +6,7 @@ from accounts.models import User
 class SenderInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['nickname', 'profile_image']
+        fields = ['nickname', 'profile_image', 'nationality', 'national_code']
 
 class LiveChatMessageSerializer(serializers.ModelSerializer):
     sender_info = SenderInfoSerializer(source='sender', read_only=True)

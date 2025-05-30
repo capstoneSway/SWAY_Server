@@ -76,6 +76,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'sender': {
                     'nickname': sender.nickname,
                     'profile_image': sender.profile_image,
+                    'nationality': sender.nationality,
+                    'national_code': sender.national_code,
                 }
             }
         )
