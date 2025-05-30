@@ -56,7 +56,6 @@ class LightningCreate(generics.CreateAPIView):
 
         lightning.current_participant = lightning.participants.count()
         lightning.update_status()
-
     
 
 # 수정 (로그인 + 작성자 본인만 가능)
