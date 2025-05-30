@@ -10,6 +10,7 @@ from .serializers import ExchangeRateSerializer, ExchangeMemoSerializer
 from .models import ExchangeMemo
 from django.conf import settings
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from .currency_name import CURRENCY_NAME_MAP
 
 # Create your views here.
@@ -80,7 +81,7 @@ class FetchTodayExchangeRatesView(APIView):
     def get(self, request):
         base_url = 'https://api.exchangerate.host/live'
         date_obj = datetime.today().date()
-        now_time = datetime.now().strftime("%H:%M:%S")
+        now_time = datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d %H:%M:%S")
         currencies = ",".join([
             "AED","AUD","BHD","BND","CAD","CHF","CNY","DKK","EUR","GBP",
             "HKD","IDR","JPY","KWD","MYR","NOK","NZD","SAR","SEK","SGD","THB","USD"
@@ -131,7 +132,7 @@ class FetchTodayExchangeRatesView(APIView):
             }
         )
 
-        return Response({'message': f'{date_obj} {now_time}환율 저장 완료'}, status=status.HTTP_200_OK)
+        return Response({'message': f'{now_time} 환율 저장 완료'}, status=status.HTTP_200_OK)
 
 
 # 환율 메모 CRUD
