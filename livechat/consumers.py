@@ -54,8 +54,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # 채팅방 정보 가져오기
         room = await self.get_chat_room(self.lightning_id)
-        # 메시지 저장
-        chat_message = await self.create_message(room, sender, message)
+        # ✅ 텍스트 메시지일 때만 DB에 저장
+        if message:
+            chat_message = await self.create_message(room, sender, message)
         # FCM 푸시 전송 (동기 함수이므로 await 사용 금지)
         participants = await self.get_participants(room, sender)
         for user in participants:
