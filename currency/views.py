@@ -80,6 +80,7 @@ class FetchTodayExchangeRatesView(APIView):
     def get(self, request):
         base_url = 'https://api.exchangerate.host/live'
         date_obj = datetime.today().date()
+        now_time = datetime.now().strftime("%H:%M:%S")
         currencies = ",".join([
             "AED","AUD","BHD","BND","CAD","CHF","CNY","DKK","EUR","GBP",
             "HKD","IDR","JPY","KWD","MYR","NOK","NZD","SAR","SEK","SGD","THB","USD"
@@ -130,7 +131,7 @@ class FetchTodayExchangeRatesView(APIView):
             }
         )
 
-        return Response({'message': f'{date_obj} 환율 저장 완료'}, status=status.HTTP_200_OK)
+        return Response({'message': f'{date_obj} {now_time}환율 저장 완료'}, status=status.HTTP_200_OK)
 
 
 # 환율 메모 CRUD
