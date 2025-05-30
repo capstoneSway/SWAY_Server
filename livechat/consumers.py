@@ -48,12 +48,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         image_url = data.get("image_url", None)
         sender = self.scope['user']
 
+        # ❗️내용이 없으면 저장하지 않음
+        if not message and not image_url:
+            return
+
         # 채팅방 정보 가져오기
         room = await self.get_chat_room(self.lightning_id)
         # 메시지 저장
         chat_message = await self.create_message(room, sender, message)
         # FCM 푸시 전송 (동기 함수이므로 await 사용 금지)
-        # participants = room.participants.exclude(id=sender.id)
         participants = await self.get_participants(room, sender)
         for user in participants:
             if user.fcm_token:
@@ -62,7 +65,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     title="새 채팅 도착",
                     body=f"{sender.nickname or sender.email}님의 메시지: {message}"
                 )
-        # 메시지 브로드캐스트
+        # WebSocket 메시지 브로드캐스트만 수행
         await self.channel_layer.group_send(
             self.room_group_name,
             {
