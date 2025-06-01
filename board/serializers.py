@@ -126,17 +126,16 @@ class BoardSerializer(serializers.ModelSerializer):
         return obj.scraps.count()
     
     def get_is_liked(self, obj):
-        user = self.context['request'].user
-        if user.is_authenticated:
-            return obj.likes.filter(user=user).exists()
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(user=request.user).exists()
         return False
 
     def get_is_scraped(self, obj):
-        user = self.context['request'].user
-        if user.is_authenticated:
-            return obj.scraps.filter(user=user).exists()
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.scraps.filter(user=request.user).exists()
         return False
-    
 
 class ReportSerializer(serializers.ModelSerializer):
     class Meta:

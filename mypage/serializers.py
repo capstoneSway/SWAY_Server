@@ -72,8 +72,9 @@ class BlockUserSerializer(serializers.ModelSerializer):
 class BlockUserListSerializer(serializers.ModelSerializer):
     blocked_user_id = serializers.IntegerField(source='blocked_user.id', read_only=True)
     nickname = serializers.CharField(source='blocked_user.nickname', read_only=True)
-    
+    profile_image = serializers.URLField(source='blocked_user.profile_image', read_only=True)
+    nationality = serializers.CharField(source='blocked_user.nationality', read_only=True)
     class Meta:
         model = BlockUser
-        fields = ['id', 'blocked_user_id', 'nickname', 'created_at']
+        fields = ['id', 'blocked_user_id', 'nickname', 'profile_image', 'nationality', 'created_at']
 
