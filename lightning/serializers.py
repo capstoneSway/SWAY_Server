@@ -10,14 +10,12 @@ class ParticipantSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'profile_image', 'nationality', 'national_code']
 
 class LightningParticipationSerializer(serializers.ModelSerializer):
-    # lightning = LightningSerializer(read_only=True)
     user = ParticipantSerializer(read_only=True) 
     relation_tag = serializers.CharField(source='get_relation_tag_display') 
 
     class Meta:
         model = LightningParticipation
-        fields = ['user', 'lightning', 'relation_tag']
-
+        fields = ['lightning', 'relation_tag']
 
 class LightningSerializer(serializers.ModelSerializer):
     host = LightningParticipationSerializer(read_only=True)
