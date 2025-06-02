@@ -147,7 +147,7 @@ class BoardSerializer(serializers.ModelSerializer):
 class ReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
-        fields = ['id', 'board', 'comment', 'reason', 'created_at']
+        fields = ['id', 'reason', 'created_at']
         read_only_fields = ['id', 'created_at']
 
     def validate(self, data):
