@@ -1,5 +1,5 @@
 from rest_framework import generics, permissions
-from .models import Lightning, Tag
+from .models import Lightning
 from .serializers import LightningSerializer, LightningDetailSerializer, ParticipantSerializer
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
@@ -47,6 +47,8 @@ class LightningCreate(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         lightning = serializer.save(host=self.request.user)
+        
+        lightning.participants.add(self.request.user)
 
         lightning.current_participant = lightning.participants.count()
         lightning.update_status()
