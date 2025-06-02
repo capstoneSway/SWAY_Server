@@ -37,7 +37,7 @@ class Lightning(models.Model):
     meeting_date = models.DateTimeField(blank=False, null=False, default=timezone.now)
     end_time = models.DateTimeField(default=get_default_end_time)
     current_participant = models.IntegerField(default=0)
-    max_participant = models.IntegerField(default=5, validators=[MinValueValidator(2), MaxValueValidator(5)])
+    max_participant = models.IntegerField(default=5, validators=[MinValueValidator(2), MaxValueValidator(6)])
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.IN_PROGRESS)
     category = models.CharField(max_length=10, choices=Category.choices, default=Category.TRAVEL)
     gender = models.CharField(max_length=10, choices=Gender.choices, default=Gender.ALL)
