@@ -9,15 +9,25 @@ class ParticipantSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'profile_image', 'nationality', 'national_code']
 
+class LightningParticipationSerializer(serializers.ModelSerializer):
+    # lightning = LightningSerializer(read_only=True)
+    user = ParticipantSerializer(read_only=True) 
+    relation_tag = serializers.CharField(source='get_relation_tag_display') 
+
+    class Meta:
+        model = LightningParticipation
+        fields = ['user', 'lightning', 'relation_tag']
+
 
 class LightningSerializer(serializers.ModelSerializer):
-    host = ParticipantSerializer(read_only=True)
-    participants = ParticipantSerializer(many=True, read_only=True)
+    host = LightningParticipationSerializer(read_only=True)
+    participants = LightningParticipationSerializer(many=True, read_only=True)
     
     class Meta:
         model = Lightning
         fields = '__all__'
         read_only_fields = ['id', 'host', 'created_at']
+
 
 class LightningDetailSerializer(serializers.ModelSerializer):
     host = ParticipantSerializer(read_only=True)
@@ -28,10 +38,4 @@ class LightningDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['id', 'host', 'created_at', 'like', 'current_participant']
 
-class LightningParticipationSerializer(serializers.ModelSerializer):
-    lightning = LightningSerializer(read_only=True)  # 또는 LightningDetailSerializer도 가능
-    relation_tag = serializers.CharField(source='get_relation_tag_display')  # 보기 좋게 한국어로 반환
 
-    class Meta:
-        model = LightningParticipation
-        fields = ['lightning', 'relation_tag']
