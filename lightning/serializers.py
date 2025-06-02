@@ -13,7 +13,7 @@ class LightningParticipationSerializer(serializers.ModelSerializer):
 
 
 class ParticipantSerializer(serializers.ModelSerializer):
-    relation_tag = serializers.CharField(source='lightningparticipation.relation_tag', read_only=True)
+    relation_tag = LightningParticipationSerializer(read_only=True)
 
     class Meta:
         model = User
