@@ -2,6 +2,9 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
 import uuid
+from django.db import transaction
+from lightning.models import LightningParticipation, Lightning
+from noti.models import Notification
 
 # Create your models here.
 
@@ -59,3 +62,34 @@ class User(AbstractUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+    
+    def delete_user_and_participations(self):
+        with transaction.atomic():
+            # 탈퇴한 사용자가 참여한 모든 LightningParticipation 삭제
+            participations = LightningParticipation.objects.filter(user=self)
+            for participation in participations:
+                lightning = participation.lightning
+                # Lightning 모임의 현재 참가자 수를 감소시킴
+                lightning.current_participant -= 1
+                lightning.update_status()
+                participation.delete()  # 참여 기록 삭제
+
+            # 사용자가 생성한 번개 모임의 상태를 CANCELED로 변경
+            hosted_lightnings = Lightning.objects.filter(host=self)
+            for lightning in hosted_lightnings:
+                lightning.status = Lightning.Status.CANCELED
+                lightning.is_active = False
+                lightning.save()
+
+                # 기 참가자들에게 알림 보내기
+                participants = lightning.participants.exclude(id=self.id)
+                for participant in participants:
+                    Notification.objects.create(
+                        user=participant,
+                        type='번개모임',
+                        event=lightning,
+                        message=f"[{lightning.title}] 번개가 취소되었어요.",
+                    )
+                    
+            # 탈퇴 처리 후 사용자 삭제
+            self.delete()

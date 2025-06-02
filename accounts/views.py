@@ -251,8 +251,22 @@ class DeleteAccountView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request):
-        request.user.delete()
-        return Response({'detail': 'Account deleted successfully.'}, status=204)
+        user = request.user
+        
+        # 사용자 탈퇴와 관련된 모든 처리
+        try:
+            user.delete_user_and_participations()  # 탈퇴 전 필요한 로직 수행
+            return Response({'detail': 'Account deleted successfully.'}, status=204)
+        except Exception as e:
+            return Response({'detail': f'Error: {str(e)}'}, status=400)
+
+# class DeleteAccountView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def delete(self, request):
+#         request.user.delete()
+#         return Response({'detail': 'Account deleted successfully.'}, status=204)
+
 
 #프로필 이미지 업데이트
 class ProfileUpdateView(generics.UpdateAPIView):
