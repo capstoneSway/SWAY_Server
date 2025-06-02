@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
 import uuid
 from django.db import transaction
-from lightning.models import LightningParticipation, Lightning
+from lightning.models import Lightning
 from noti.models import Notification
 
 # Create your models here.
@@ -67,13 +67,12 @@ class User(AbstractUser, PermissionsMixin):
         try:
             # 트랜잭션 시작
             with transaction.atomic():
-                # 1. 참여한 모든 LightningParticipation 삭제
-                participations = LightningParticipation.objects.filter(user=self)
-                for participation in participations:
-                    lightning = participation.lightning
+                # 1. 사용자가 참여한 모든 번개 모임에서 참가자 수 감소
+                lightnings = Lightning.objects.filter(participants=self)
+                for lightning in lightnings:
                     lightning.current_participant -= 1  # 참가자 수 감소
                     lightning.update_status()  # 상태 업데이트
-                    participation.delete()  # 참여 기록 삭제
+                    lightning.participants.remove(self)  # 참가자 목록에서 삭제
 
                 # 2. 사용자가 생성한 번개 모임의 상태를 CANCELED로 변경
                 hosted_lightnings = Lightning.objects.filter(host=self)

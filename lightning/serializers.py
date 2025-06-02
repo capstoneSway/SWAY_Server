@@ -1,21 +1,11 @@
 from rest_framework import serializers
-from .models import Lightning, LightningParticipation
+from .models import Lightning
 from django.conf import settings
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
-class LightningParticipationSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField() 
-    relation_tag = serializers.CharField(source='get_relation_tag_display')
-
-    class Meta:
-        model = LightningParticipation
-        fields = ['user', 'relation_tag']
-
 
 class ParticipantSerializer(serializers.ModelSerializer):
-    relation_tag = LightningParticipationSerializer(read_only=True)
-
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'profile_image', 'nationality', 'national_code', 'relation_tag']

@@ -43,7 +43,7 @@ class Lightning(models.Model):
     gender = models.CharField(max_length=10, choices=Gender.choices, default=Gender.ALL)
     background_pic = models.CharField(max_length=255, blank=True)
     like = models.IntegerField(default=0)
-    participants = models.ManyToManyField(settings.AUTH_USER_MODEL, through='LightningParticipation', related_name='joined_lightnings')
+    participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='joined_lightnings')
 
     def __str__(self):
         return self.title
@@ -54,8 +54,3 @@ class Lightning(models.Model):
         else:
             self.status = self.Status.IN_PROGRESS
         self.save()
-
-class LightningParticipation(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    lightning = models.ForeignKey('Lightning', on_delete=models.CASCADE)
-    relation_tag = models.CharField(max_length=20, choices=Tag.choices, default=Tag.IRRELEVANT)

@@ -1,6 +1,6 @@
 from rest_framework import generics, permissions
-from .models import Lightning, LightningParticipation, Tag
-from .serializers import LightningSerializer, LightningDetailSerializer, ParticipantSerializer, LightningParticipationSerializer
+from .models import Lightning, Tag
+from .serializers import LightningSerializer, LightningDetailSerializer, ParticipantSerializer
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -47,12 +47,6 @@ class LightningCreate(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         lightning = serializer.save(host=self.request.user)
-
-        LightningParticipation.objects.create(
-            user=self.request.user,
-            lightning=lightning,
-            relation_tag=Tag.HOSTED
-        )
 
         lightning.current_participant = lightning.participants.count()
         lightning.update_status()
@@ -131,15 +125,6 @@ class JoinLightning(APIView):
         lightning.current_participant += 1
         lightning.update_status()
 
-        participation, created = LightningParticipation.objects.get_or_create(
-            user=user,
-            lightning=lightning,
-            defaults={'relation_tag': Tag.PARTICIPATED}
-        )
-        if not created:
-            participation.relation_tag = Tag.PARTICIPATED
-            participation.save()
-
         # 알림 생성: 참가자가 번개 모임에 참가했음을 호스트에게 알림
         Notification.objects.create(
             user = lightning.host,
@@ -186,10 +171,6 @@ class LeaveLightning(APIView):
         lightning.current_participant -= 1
         lightning.update_status()
 
-        participation = LightningParticipation.objects.filter(user=user, lightning=lightning).first()
-        if participation:
-            participation.relation_tag = Tag.IRRELEVANT
-            participation.save()
 
         # 알림 : 호스트에게 참가 취소 알림
         Notification.objects.create(
