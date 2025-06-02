@@ -5,11 +5,12 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class LightningParticipationSerializer(serializers.ModelSerializer):
-    relation_tag = serializers.CharField(source='get_relation_tag_display') 
+    user = serializers.StringRelatedField() 
+    relation_tag = serializers.CharField(source='get_relation_tag_display')
 
     class Meta:
         model = LightningParticipation
-        fields = ['relation_tag']
+        fields = ['user', 'relation_tag']
 
 
 class ParticipantSerializer(serializers.ModelSerializer):
