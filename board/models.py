@@ -45,7 +45,7 @@ class BoardLike(models.Model):
 
 class CommentLike(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, blank=False, on_delete=models.CASCADE)
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='likes')
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='commentlikes')
 
     class Meta:
         unique_together = ('user', 'comment')
