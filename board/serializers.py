@@ -149,11 +149,3 @@ class ReportSerializer(serializers.ModelSerializer):
         model = Report
         fields = ['id', 'reason', 'created_at']
         read_only_fields = ['id', 'created_at']
-
-    def validate(self, data):
-        board = data.get('board')
-        comment = data.get('comment')
-
-        if not board and not comment:
-            raise serializers.ValidationError("Either board or comment must be provided.")
-        return data
