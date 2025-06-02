@@ -27,8 +27,8 @@ def chat_room_view(request, lightning_id):
     return render(request, 'livechat/chat_room.html', {'lightning': lightning})
 
 class ChatImageUploadView(APIView):
-    permission_classes = [AllowAny,] # ✅ 테스트 중에는 모든 사용자 허용
-    # permission_classes = [IsAuthenticated]
+    # permission_classes = [AllowAny,] # ✅ 테스트 중에는 모든 사용자 허용
+    permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request, room_id):

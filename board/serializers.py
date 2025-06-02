@@ -18,13 +18,14 @@ class CommentSerializer(serializers.ModelSerializer):
     nationality = serializers.CharField(source='user.nationality', read_only=True)
     parent_username = serializers.CharField(source='parent_user.username', read_only=True)
     parent_nickname = serializers.CharField(source='parent_user.nickname', read_only=True)
+    comment_is_liked = serializers.SerializerMethodField() #commentlikes
     like_count = serializers.SerializerMethodField()
     is_blocked = serializers.SerializerMethodField()
     class Meta:
         model = Comment
         fields = ('id', 'username', 'nickname', 'profile_image', 'nationality', 
             'board_id', 'date', 'parent_id',
-            'parent_username', 'parent_nickname', 'is_blocked', 'is_deleted', 'content', 'like_count', 'reply')
+            'parent_username', 'parent_nickname', 'is_blocked', 'is_deleted', 'content', 'comment_is_liked','like_count', 'reply')
         read_only_fields = [
             'id', 'user', 'username', 'nickname', 'profile_image', 'nationality', 'board_id',
             'date', 'parent_username', 'parent_nickname', 'is_blocked',
@@ -44,9 +45,15 @@ class CommentSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return BlockUser.objects.filter(user=request.user, blocked_user=obj.user).exists()
         return False
+    
+    def get_comment_is_liked(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.commentlikes.filter(user=request.user).exists()
+        return False
 
     def get_like_count(self, obj):
-        return obj.likes.count()
+        return obj.commentlikes.count()
     
     def get_reply(self, instance):
         replies = instance.reply.all()
@@ -126,17 +133,16 @@ class BoardSerializer(serializers.ModelSerializer):
         return obj.scraps.count()
     
     def get_is_liked(self, obj):
-        user = self.context['request'].user
-        if user.is_authenticated:
-            return obj.likes.filter(user=user).exists()
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(user=request.user).exists()
         return False
 
     def get_is_scraped(self, obj):
-        user = self.context['request'].user
-        if user.is_authenticated:
-            return obj.scraps.filter(user=user).exists()
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.scraps.filter(user=request.user).exists()
         return False
-    
 
 class ReportSerializer(serializers.ModelSerializer):
     class Meta:
