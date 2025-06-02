@@ -4,22 +4,24 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
-class ParticipantSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'profile_image', 'nationality', 'national_code']
-
 class LightningParticipationSerializer(serializers.ModelSerializer):
-    user = ParticipantSerializer(read_only=True) 
     relation_tag = serializers.CharField(source='get_relation_tag_display') 
 
     class Meta:
         model = LightningParticipation
-        fields = ['lightning', 'relation_tag']
+        fields = ['relation_tag']
+
+class ParticipantSerializer(serializers.ModelSerializer):
+    relation_tag = LightningParticipationSerializer(read_only=True)
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'profile_image', 'nationality', 'national_code', 'relation_tag']
+
+
 
 class LightningSerializer(serializers.ModelSerializer):
-    host = LightningParticipationSerializer(read_only=True)
-    participants = LightningParticipationSerializer(many=True, read_only=True)
+    host = ParticipantSerializer(read_only=True)
+    participants = ParticipantSerializer(many=True, read_only=True)
     
     class Meta:
         model = Lightning
