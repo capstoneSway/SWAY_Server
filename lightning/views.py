@@ -144,7 +144,8 @@ class JoinLightning(APIView):
         Notification.objects.create(
             user = lightning.host,
             type = "번개모임",
-            event = f"{user.username}님이 [{lightning.title}] 번개에 참가했어요."
+            event = lightning,
+            message = f"{user.username}님이 [{lightning.title}] 번개에 참가했어요."
         )
 
         # 푸시 알림 전송: 호스트에게
