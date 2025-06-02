@@ -64,32 +64,42 @@ class User(AbstractUser, PermissionsMixin):
         return self.email
     
     def delete_user_and_participations(self):
-        with transaction.atomic():
-            # 탈퇴한 사용자가 참여한 모든 LightningParticipation 삭제
-            participations = LightningParticipation.objects.filter(user=self)
-            for participation in participations:
-                lightning = participation.lightning
-                # Lightning 모임의 현재 참가자 수를 감소시킴
-                lightning.current_participant -= 1
-                lightning.update_status()
-                participation.delete()  # 참여 기록 삭제
+        try:
+            # 트랜잭션 시작
+            with transaction.atomic():
+                # 1. 참여한 모든 LightningParticipation 삭제
+                participations = LightningParticipation.objects.filter(user=self)
+                for participation in participations:
+                    lightning = participation.lightning
+                    lightning.current_participant -= 1  # 참가자 수 감소
+                    lightning.update_status()  # 상태 업데이트
+                    participation.delete()  # 참여 기록 삭제
 
-            # 사용자가 생성한 번개 모임의 상태를 CANCELED로 변경
-            hosted_lightnings = Lightning.objects.filter(host=self)
-            for lightning in hosted_lightnings:
-                lightning.status = Lightning.Status.CANCELED
-                lightning.is_active = False
-                lightning.save()
+                # 2. 사용자가 생성한 번개 모임의 상태를 CANCELED로 변경
+                hosted_lightnings = Lightning.objects.filter(host=self)
+                for lightning in hosted_lightnings:
+                    lightning.status = Lightning.Status.CANCELED  # 상태 변경
+                    lightning.is_active = False  # 비활성화 처리
+                    lightning.save()  # 상태 저장
 
-                # 기 참가자들에게 알림 보내기
-                participants = lightning.participants.exclude(id=self.id)
-                for participant in participants:
-                    Notification.objects.create(
-                        user=participant,
-                        type='번개모임',
-                        event=lightning,
-                        message=f"[{lightning.title}] 번개가 취소되었어요.",
-                    )
-                    
-            # 탈퇴 처리 후 사용자 삭제
-            self.delete()
+                    # 3. 기 참가자들에게 알림 보내기
+                    participants = lightning.participants.exclude(id=self.id)  # 호스트 제외
+                    for participant in participants:
+                        Notification.objects.create(
+                            user=participant,
+                            type='번개모임',
+                            event=lightning,
+                            message=f"[{lightning.title}] 번개가 취소되었어요.",
+                        )
+
+                # 4. 사용자 비활성화 처리
+                self.is_active = False  # 사용자 비활성화
+                self.save()  # 사용자 상태 변경 저장
+
+                # 5. 실제 삭제 작업 (삭제는 마지막에 처리)
+                self.delete()  # 삭제 실행
+
+        except Exception as e:
+            # 예외 처리
+            # logger.error(f"Error during user deletion: {str(e)}")
+            raise e
