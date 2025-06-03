@@ -9,7 +9,7 @@ class RecursiveSerializer(serializers.Serializer):
         return serializer.data
 
 class CommentSerializer(serializers.ModelSerializer):
-    parent_id = serializers.IntegerField(write_only=True, required=False)  # 그냥 숫자 받기
+    parent_id = serializers.IntegerField(required=False)
     reply = serializers.SerializerMethodField()
     board_id = serializers.IntegerField(source='board.id', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
