@@ -66,7 +66,17 @@ class CommentSerializer(serializers.ModelSerializer):
         serializer = self.__class__(replies, many=True, context=self.context)
         serializer.bind('', self)
         return serializer.data
-        
+    
+    def create(self, validated_data):
+        parent_id = self.initial_data.get('parent_id')
+        if parent_id:
+            try:
+                parent = Comment.objects.get(id=parent_id)
+                validated_data['parent'] = parent
+                validated_data['parent_user'] = parent.user  # parent_user도 자동 설정
+            except Comment.DoesNotExist:
+                raise serializers.ValidationError({'parent_id': 'Invalid parent comment ID.'})
+        return super().create(validated_data)
 
     '''
         def get_reply(self, instance):
