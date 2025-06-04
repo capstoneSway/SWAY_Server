@@ -24,7 +24,7 @@ class MyPageView(GenericAPIView):
         return Response({
             "participanted_lightening": LightningSerializer(participanted_lightening, many=True).data,
             "my_posts": BoardSerializer(my_posts, many=True).data,
-            "scrapped_posts": BoardSerializer(scrapped_posts, many=True, context={'request': request}),
+            "scrapped_posts": BoardSerializer(scrapped_posts, many=True, context={'request': request}).data,
         })
     
 class NotiSettingView(RetrieveUpdateAPIView):
