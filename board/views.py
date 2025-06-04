@@ -174,6 +174,8 @@ class BoardLikeToggleView(GenericAPIView):
 
     def post(self, request, board_id):
         board = get_object_or_404(Board, pk=board_id)
+        if board.user == request.user:
+            return Response({'error': 'You cannot like your own post.'}, status=400)
         like, created = BoardLike.objects.get_or_create(user=request.user, board=board)
         if not created:
             like.delete()
@@ -190,6 +192,9 @@ class CommentLikeToggleView(GenericAPIView):
 
     def post(self, request, board_id, comment_id):
         comment = get_object_or_404(Comment, pk=comment_id, board_id=board_id)
+        if comment.user == request.user:
+            return Response({'error': 'You cannot like your own comment.'}, status=400)
+
         like, created = CommentLike.objects.get_or_create(user=request.user, comment=comment)
         if not created:
             like.delete()
@@ -207,6 +212,9 @@ class BoardScrapToggleView(GenericAPIView):
 
     def post(self, request, board_id):
         board = get_object_or_404(Board, pk=board_id)
+        if board.user == request.user:
+            return Response({'error': 'You cannot scrap your own post.'}, status=400)
+
         scrap, created = BoardScrap.objects.get_or_create(user=request.user, board=board)
         if not created:
             scrap.delete()

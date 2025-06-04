@@ -134,7 +134,7 @@ class BoardSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user', 'username', 'nickname', 'profile_image', 'nationality', 'date', 'comment_count', 'like_count', 'scrap_count', 'is_liked', 'is_scraped']
 
     def get_comment_count(self, obj):
-        return obj.comments.count() 
+        return obj.comments.filter(is_deleted=False).count()
 
     def get_like_count(self, obj):
         return obj.likes.count()
