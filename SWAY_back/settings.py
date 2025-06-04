@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'channels',
     'daphne',
     'storages',
-    # 'django_cron',
+    'django_cron',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -270,6 +270,6 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'accounts.User'
 
-# CRON_CLASSES = [
-#     'lightning.cron.UpdateLightningStatusCronJob',
-# ]
+CRON_CLASSES = [
+    'lightning.cron.UpdateLightningStatusCronJob',
+]
