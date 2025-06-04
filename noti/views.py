@@ -71,16 +71,28 @@ class DeleteAllNotificationsView(APIView):
 
 class PushTestView(APIView):
     def post(self, request):
+        # 요청에서 user_id 가져오기
         user_id = request.data.get('user_id')
-        user = User.objects.get(id=user_id)
-
+        
+        # user_id로 User 객체 가져오기
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=404)
+        
+        # FCM 토큰이 없는 경우 처리
         if not user.fcm_token:
             return Response({"error": "FCM 토큰이 없습니다."}, status=400)
 
+        # 이미지 URL을 데이터로 받을 수 있도록 처리
+        image_url = request.data.get('image_url', None)  # 이미지 URL을 받음
+        
+        # FCM 푸시 알림 전송
         send_fcm_notification(
             token=user.fcm_token,
             title="테스트 알림",
-            body="테스트 푸시입니다"
+            body="테스트 푸시입니다",
+            image_url=image_url  # 이미지 URL을 전달
         )
 
         return Response({"message": "푸시 전송 성공!"})
