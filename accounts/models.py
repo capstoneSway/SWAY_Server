@@ -5,6 +5,7 @@ import uuid
 from django.db import transaction
 from lightning.models import Lightning
 from noti.models import Notification
+from SWAY_back.storages import MediaStorage
 
 # Create your models here.
 
@@ -43,6 +44,7 @@ class User(AbstractUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     nickname = models.CharField(max_length=50, blank=True, null=True, unique=True)
     profile_image = models.URLField(blank=True, null=True)
+    profile_image_changed = models.ImageField(upload_to='media/profile_images/', storage=MediaStorage(), blank=True, null=True)
     gender = models.CharField(max_length=10, blank=True, null=True)
     social_id = models.CharField(max_length=100, unique=True, default="")
     social_type = models.CharField(max_length=30, default="")

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import User
+from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 
@@ -45,7 +46,31 @@ class NationalitySerializer(serializers.ModelSerializer):
         model = User
         fields = ['nationality', 'national_code']
 
+# ✅ 사용자 정보 조회 시: 통합된 profile_image_url 필드 반환
+class UserSerializer(serializers.ModelSerializer):
+    profile_image_url = serializers.SerializerMethodField()
+
+    def get_profile_image_url(self, obj):
+            if obj.profile_image_changed:
+                return f"https://{settings.AWS_CLOUDFRONT_DOMAIN}/{obj.profile_image_changed.name}"
+            elif obj.profile_image:
+                return obj.profile_image
+            return None
+    
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'email',
+            'nickname',
+            'gender',
+            'nationality',
+            'profile_image_url',
+        ]
+
+# ✅ SWAY 앱에서 사용자가 직접 업로드한 프로필 이미지 수정용
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['profile_image']
+        fields = ['nickname', 'profile_image_changed']

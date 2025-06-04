@@ -11,14 +11,16 @@ import requests
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.conf import settings
 from accounts.models import User
 from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import LogoutSerializer, NicknameSerializer, NationalitySerializer, ProfileUpdateSerializer
+from .serializers import UserSerializer, LogoutSerializer, NicknameSerializer, NationalitySerializer, ProfileUpdateSerializer
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 # 환경변수 파일 관련 설정
@@ -37,7 +39,7 @@ kakao_token_uri = "https://kauth.kakao.com/oauth/token"
 kakao_profile_uri = "https://kapi.kakao.com/v2/user/me"
 
 
-#카카오 로그인
+# 카카오 로그인 요청(카카오 로그인 페이지로 이동)
 class KakaoLoginView(APIView):
     permission_classes = (AllowAny,)
 
@@ -53,7 +55,7 @@ class KakaoLoginView(APIView):
         res = redirect(uri)
         return res
 
-
+# 카카오 로그인 콜백(카카오 로그인 후 콜백 처리)
 class KakaoCallbackView(APIView):
     permission_classes = (AllowAny,)
 
@@ -191,21 +193,34 @@ class CookieTokenRefreshView(TokenRefreshView):
 
         return response
 
-
 # 유저 정보 조회
 class UserInfoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-        return Response({
-            "username": user.username,
-            "profile_image": user.profile_image,
-            "nickname": user.nickname,
-            "nationality": user.nationality,
-            "gender": user.gender,
-        })
-    
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+# class UserInfoView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def get(self, request):
+#         user = request.user
+#         if user.profile_image_changed:
+#             image_url = f"https://{settings.AWS_CLOUDFRONT_DOMAIN}/{user.profile_image_changed.name}"
+#         else:
+#             image_url = user.profile_image
+
+#     def get(self, request):
+#         user = request.user
+#         return Response({
+#             "username": user.username,
+#             "profile_image": user.profile_image,
+#             "nickname": user.nickname,
+#             "nationality": user.nationality,
+#             "gender": user.gender,
+#         })
+
+# 유저 로그아웃
 class LogoutAPIView(APIView):
     serializer_class = LogoutSerializer
     permission_classes = [IsAuthenticated]
@@ -215,7 +230,6 @@ class LogoutAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response("Successfully logged out", status=status.HTTP_204_NO_CONTENT)
-
 
 # 유저 닉네임 중복 체크
 class CheckNicknameView(APIView):
@@ -237,7 +251,6 @@ class SetNicknameView(generics.UpdateAPIView):
     def get_object(self):
         return self.request.user
 
-
 # 유저 국적 저장
 class SetNationalityView(generics.UpdateAPIView):
     serializer_class = NationalitySerializer
@@ -245,7 +258,16 @@ class SetNationalityView(generics.UpdateAPIView):
 
     def get_object(self):
         return self.request.user
-    
+
+# 프로필 이미지 업데이트
+class ProfileUpdateView(generics.UpdateAPIView):
+    serializer_class = ProfileUpdateSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_object(self):
+        return self.request.user
+
 # 유저 탈퇴
 class DeleteAccountView(APIView):
     permission_classes = [IsAuthenticated]
@@ -260,22 +282,7 @@ class DeleteAccountView(APIView):
         except Exception as e:
             return Response({'detail': f'Error: {str(e)}'}, status=400)
 
-# class DeleteAccountView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def delete(self, request):
-#         request.user.delete()
-#         return Response({'detail': 'Account deleted successfully.'}, status=204)
-
-
-#프로필 이미지 업데이트
-class ProfileUpdateView(generics.UpdateAPIView):
-    serializer_class = ProfileUpdateSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_object(self):
-        return self.request.user
-
+# 유저 고유 FCM 토큰 업데이트
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def update_fcm_token(request):
