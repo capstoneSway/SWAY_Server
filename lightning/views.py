@@ -10,6 +10,16 @@ from django.shortcuts import get_object_or_404
 from noti.models import Notification
 from noti.fcm import send_fcm_notification
 from django.db.models import Q
+from django.utils import timezone
+from django.http import JsonResponse
+from .models import Lightning
+
+def update_lightning_status(request):
+    now = timezone.now()
+    lightnings = Lightning.objects.filter(status='inProgress', end_time__lt=now)
+
+    updated_count = lightnings.update(status='done')
+    return JsonResponse({'message': f'{updated_count} 개의 번개 모임 상태가 업데이트되었습니다.'})
 
 # 전체 목록 조회 (모든 사용자 가능)
 class LightningList(generics.ListAPIView):
