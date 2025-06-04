@@ -10,7 +10,7 @@ from .views import (
 app_name = 'lightning'
 
 urlpatterns = [
-    path('api/update-status/', update_lightning_status, name='update_lightning_status'),
+    path('update-status/', update_lightning_status, name='update_lightning_status'),
     path('', LightningList.as_view(), name='meetup-list'),
     path('create/', LightningCreate.as_view(), name='meetup-create'),
     path('<int:pk>/', LightningDetail.as_view(), name='meetup-detail'),
