@@ -13,6 +13,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.http import JsonResponse
 from .models import Lightning
+from mypage.models import NotiSetting
 
 def update_lightning_status(request):
     now = timezone.now()
@@ -97,41 +98,55 @@ class LightningDelete(generics.DestroyAPIView):
         if self.request.user != instance.host:
             raise PermissionDenied("삭제 권한이 없습니다.")
         
-        # 호스트에게 알림
-        host_message = f"[{instance.title}] 번개가 삭제되었어요."
-        Notification.objects.create(
-            user=instance.host,
-            type='번개모임',
-            event=instance,
-            message=host_message,
-        )
+        # 호스트의 NotiSetting 가져오기
+        try:
+            host_noti_setting = NotiSetting.objects.get(user=instance.host)
+        except NotiSetting.DoesNotExist:
+            return Response({"error": "호스트의 알림 설정이 없습니다."}, status=404)
 
-        if instance.host.fcm_token:
-            send_fcm_notification(
-                user = instance.host,
-                token=instance.host.fcm_token,
-                title="번개 모임 삭제 알림",
-                body=host_message
+        if host_noti_setting and host_noti_setting.meetup_noti:
+            # 호스트에게 알림
+            host_message = f"[{instance.title}] 번개가 삭제되었어요."
+            Notification.objects.create(
+                user=instance.host,
+                type='번개모임',
+                event=instance,
+                message=host_message,
             )
+
+            if instance.host.fcm_token:
+                send_fcm_notification(
+                    user = instance.host,
+                    token=instance.host.fcm_token,
+                    title="번개 모임 삭제 알림",
+                    body=host_message
+                )
         
         # 참가자(호스트 제외)들에게 알림
         participants = instance.participants.exclude(id=instance.host.id)
         for participant in participants:
-            participant_message = f"[{instance.title}] 번개가 취소되었어요."
-            Notification.objects.create(
-                user=participant,
-                type='번개모임',
-                event=instance,
-                message=participant_message,
-            )
-            
-            if participant.fcm_token:
-                send_fcm_notification(
+            # 참가자의 NotiSetting 가져오기
+            try:
+                participant_noti_setting = NotiSetting.objects.get(user=participant)
+            except NotiSetting.DoesNotExist:
+                continue
+
+            if participant_noti_setting and participant_noti_setting.meetup_noti:
+                participant_message = f"[{instance.title}] 번개가 취소되었어요."
+                Notification.objects.create(
                     user=participant,
-                    token=participant.fcm_token,
-                    title="번개 모임 삭제 알림",
-                    body=participant_message
+                    type='번개모임',
+                    event=instance,
+                    message=participant_message,
                 )
+                
+                if participant.fcm_token:
+                    send_fcm_notification(
+                        user=participant,
+                        token=participant.fcm_token,
+                        title="번개 모임 삭제 알림",
+                        body=participant_message
+                    )
 
         # 상태 비활성화 처리
         instance.is_active = False
@@ -155,22 +170,29 @@ class JoinLightning(APIView):
         lightning.current_participant += 1
         lightning.update_status()
 
-        # 알림 생성: 참가자가 번개 모임에 참가했음을 호스트에게 알림
-        Notification.objects.create(
-            user = lightning.host,
-            type = "번개모임",
-            event = lightning,
-            message = f"{user.nickname}님이 [{lightning.title}] 번개에 참가했어요."
-        )
+        # 호스트의 NotiSetting 가져오기
+        try:
+            host_noti_setting = NotiSetting.objects.get(user=lightning.host)
+        except NotiSetting.DoesNotExist:
+            return Response({"error": "호스트의 알림 설정이 없습니다."}, status=404)
 
-        # 푸시 알림 전송: 호스트에게
-        if lightning.host.fcm_token:
-            send_fcm_notification(
-                user=lightning.host,
-                token=lightning.host.fcm_token,
-                title="번개 참가 알림",
-                body=f"{user.nickname}님이 [{lightning.title}] 번개에 참가했어요."
+        if host_noti_setting and host_noti_setting.meetup_noti:
+        # 알림 생성: 참가자가 번개 모임에 참가했음을 호스트에게 알림
+            Notification.objects.create(
+                user = lightning.host,
+                type = "번개모임",
+                event = lightning,
+                message = f"{user.nickname}님이 [{lightning.title}] 번개에 참가했어요."
             )
+
+            # 푸시 알림 전송: 호스트에게
+            if lightning.host.fcm_token:
+                send_fcm_notification(
+                    user=lightning.host,
+                    token=lightning.host.fcm_token,
+                    title="번개 참가 알림",
+                    body=f"{user.nickname}님이 [{lightning.title}] 번개에 참가했어요."
+                )
 
         participants = lightning.participants.all()
         serialized_participants = ParticipantSerializer(participants, many=True).data
@@ -202,23 +224,29 @@ class LeaveLightning(APIView):
         lightning.current_participant -= 1
         lightning.update_status()
 
+        # 호스트의 NotiSetting 가져오기
+        try:
+            host_noti_setting = NotiSetting.objects.get(user=lightning.host)
+        except NotiSetting.DoesNotExist:
+            return Response({"error": "호스트의 알림 설정이 없습니다."}, status=404)
 
-        # 알림 : 호스트에게 참가 취소 알림
-        Notification.objects.create(
-            user=lightning.host,
-            type='번개모임',
-            event=lightning,
-            message=f"{user.nickname}님이 [{lightning.title}] 번개 참가를 취소했어요.",
-        )
-
-        # 푸시 알림 전송: 호스트에게
-        if lightning.host.fcm_token:
-            send_fcm_notification(
+        if host_noti_setting and host_noti_setting.meetup_noti:
+            # 알림 : 호스트에게 참가 취소 알림
+            Notification.objects.create(
                 user=lightning.host,
-                token=lightning.host.fcm_token,
-                title="번개 참가 취소 알림",
-                body=f"{user.nickname}님이 [{lightning.title}] 번개 참가를 취소했어요."
+                type='번개모임',
+                event=lightning,
+                message=f"{user.nickname}님이 [{lightning.title}] 번개 참가를 취소했어요.",
             )
+
+            # 푸시 알림 전송: 호스트에게
+            if lightning.host.fcm_token:
+                send_fcm_notification(
+                    user=lightning.host,
+                    token=lightning.host.fcm_token,
+                    title="번개 참가 취소 알림",
+                    body=f"{user.nickname}님이 [{lightning.title}] 번개 참가를 취소했어요."
+                )
 
         participants = lightning.participants.all()
         serialized_participants = ParticipantSerializer(participants, many=True).data

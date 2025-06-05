@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from accounts.models import User
 from noti.fcm import send_fcm_notification
+from mypage.models import NotiSetting
 
 # 알림 전체 목록 조회 (로그인한 사용자의 알림만)
 class NotificationListView(generics.ListAPIView):
@@ -79,6 +80,16 @@ class PushTestView(APIView):
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return Response({"error": "User not found."}, status=404)
+        
+        # NotiSetting에서 해당 유저의 알림 설정 가져오기
+        try:
+            noti_setting = NotiSetting.objects.get(user=user)
+        except NotiSetting.DoesNotExist:
+            return Response({"error": "알림 설정이 없습니다."}, status=404)
+
+        # 유저가 chat_noti를 True로 설정한 경우에만 푸시 전송
+        if not noti_setting.chat_noti:
+            return Response({"error": "채팅 알림 설정이 꺼져 있습니다."}, status=400)
         
         # FCM 토큰이 없는 경우 처리
         if not user.fcm_token:

@@ -11,6 +11,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.generics import ListAPIView, ListCreateAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView, RetrieveUpdateAPIView, GenericAPIView
 from rest_framework.response import Response
+from mypage.models import NotiSetting
 
 #댓글 알림 함수
 def notify_on_comment_create(comment):
@@ -25,54 +26,54 @@ def notify_on_comment_create(comment):
 
     # 게시글 작성자 알림
     if board_owner and board_owner != author and (not comment.parent or comment.parent.user != board_owner):
-        message = f"{author.nickname} ({author.username}) commented on your post \"{board_title}\": \"{comment_preview}\""
-        Notification.objects.create(
-            user=board_owner,
-            type='board',
-            board=board,
-            message=message
-        )
-        if board_owner.fcm_token:
-            send_fcm_notification(
-                token=board_owner.fcm_token,
+        # 게시글 작성자의 알림 설정 가져오기
+        try:
+            board_owner_noti_setting = NotiSetting.objects.get(user=board_owner)
+        except NotiSetting.DoesNotExist:
+            board_owner_noti_setting = None
+        
+        # 알림 설정이 없거나 comment_noti가 False이면 알림을 보내지 않음
+        if board_owner_noti_setting and board_owner_noti_setting.comment_noti:
+            message = f"{author.nickname} ({author.username}) commented on your post \"{board_title}\": \"{comment_preview}\""
+            Notification.objects.create(
                 user=board_owner,
-                title="New Comment",
-                body=message,
-                # data={
-                #     "type": "comment",
-                #     "board_id": str(board.id),
-                #     "comment_id": str(comment.id),
-                #     "content": comment_preview,
-                #     "username": author.username
-                # }
+                type='댓글',
+                board=board,
+                message=message
             )
-
-
+            if board_owner.fcm_token:
+                send_fcm_notification(
+                    token=board_owner.fcm_token,
+                    user=board_owner,
+                    title="New Comment",
+                    body=message,
+                )
 
     # 부모 댓글 작성자 알림 (대댓글)
     if parent_comment and parent_comment_user and parent_comment_user != author:
-        parent_preview = parent_comment.content[:50]
-        message = f"{author.nickname} ({author.username}) replied to your comment \"{parent_preview}\" on \"{board_title}\""
-        Notification.objects.create(
-            user=parent_comment_user,
-            type='comment',
-            board=board,
-            message=message
-        )
-        if parent_comment_user.fcm_token:
-            send_fcm_notification(
-                token=parent_comment_user.fcm_token,
+        # 부모 댓글 작성자의 알림 설정 가져오기
+        try:
+            parent_comment_user_noti_setting = NotiSetting.objects.get(user=parent_comment_user)
+        except NotiSetting.DoesNotExist:
+            parent_comment_user_noti_setting = None
+        
+        # 알림 설정이 없거나 reply_noti가 False이면 알림을 보내지 않음
+        if parent_comment_user_noti_setting and parent_comment_user_noti_setting.comment_noti:
+            parent_preview = parent_comment.content[:50]
+            message = f"{author.nickname} ({author.username}) replied to your comment \"{parent_preview}\" on \"{board_title}\""
+            Notification.objects.create(
                 user=parent_comment_user,
-                title="New Reply",
-                body=message,
-                # data={
-                #     "type": "reply",
-                #     "board_id": str(board.id),
-                #     "comment_id": str(comment.id),
-                #     "content": parent_preview,
-                #     "username": author.username
-                # }
+                type='대댓글',
+                board=board,
+                message=message
             )
+            if parent_comment_user.fcm_token:
+                send_fcm_notification(
+                    token=parent_comment_user.fcm_token,
+                    user=parent_comment_user,
+                    title="New Reply",
+                    body=message,
+                )
 
 class BoardList(ListAPIView):
     queryset = Board.objects.all()
