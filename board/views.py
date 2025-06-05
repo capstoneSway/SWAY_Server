@@ -36,6 +36,7 @@ def notify_on_comment_create(comment):
             user=board_owner,
             title="New Comment",
             body=message,
+            token=board_owner.fcm_token,
             data={
                 "type": "comment",
                 "board_id": str(board.id),
@@ -56,6 +57,7 @@ def notify_on_comment_create(comment):
             message=message
         )
         send_fcm_notification(
+            token=parent_comment_user.fcm_token,
             user=parent_comment_user,
             title="New Reply",
             body=message,
