@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import *
+from accounts.utils import get_profile_image_url
 from mypage.models import BlockUser
 from django.conf import settings
 
@@ -14,13 +15,17 @@ class CommentSerializer(serializers.ModelSerializer):
     board_id = serializers.IntegerField(source='board.id', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
     nickname = serializers.CharField(source='user.nickname', read_only=True)
-    profile_image = serializers.URLField(source='user.profile_image', read_only=True)
+    profile_image = serializers.SerializerMethodField()
     nationality = serializers.CharField(source='user.nationality', read_only=True)
     parent_username = serializers.CharField(source='parent_user.username', read_only=True)
     parent_nickname = serializers.CharField(source='parent_user.nickname', read_only=True)
     comment_is_liked = serializers.SerializerMethodField() #commentlikes
     like_count = serializers.SerializerMethodField()
     is_blocked = serializers.SerializerMethodField()
+
+    def get_profile_image(self, obj):
+        return get_profile_image_url(obj.user)
+    
     class Meta:
         model = Comment
         fields = ('id', 'username', 'nickname', 'profile_image', 'nationality', 
@@ -86,17 +91,19 @@ class CommentSerializer(serializers.ModelSerializer):
         return serializer.data
     '''
 
-        
-
 # 디테일 페이지에서 재귀문 제거를 위해 따로 작성 / 읽기전용
 class CommentDetailSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='user.username', read_only=True)
     nickname = serializers.CharField(source='user.nickname', read_only=True)
-    profile_image = serializers.URLField(source='user.profile_image', read_only=True)
+    profile_image = serializers.SerializerMethodField()
     nationality = serializers.CharField(source='user.nationality', read_only=True)
     board_id = serializers.IntegerField(source='board.id', read_only=True)
     parent = serializers.IntegerField(source='parent.id', read_only=True)
     parent_nickname = serializers.CharField(source='parent_user.nickname', read_only=True)
+
+    def get_profile_image(self, obj):
+        return get_profile_image_url(obj.user)
+    
     class Meta:
         model = Comment
         fields = ('id', 'username','nickname', 'profile_image', 'nationality', 'board_id' ,'date', 'is_deleted', 'parent', 'parent_nickname', 'content')
@@ -122,11 +129,14 @@ class BoardSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField()
     scrap_count = serializers.SerializerMethodField()
     nickname = serializers.CharField(source='user.nickname', read_only=True)
-    profile_image = serializers.URLField(source='user.profile_image', read_only=True)
+    profile_image = serializers.SerializerMethodField()
     nationality = serializers.CharField(source='user.nationality', read_only=True)
     images = BoardImageSerializer(many=True, read_only=True)
     is_liked = serializers.SerializerMethodField()
     is_scraped = serializers.SerializerMethodField()
+
+    def get_profile_image(self, obj):
+        return get_profile_image_url(obj.user)
 
     class Meta:
         model = Board

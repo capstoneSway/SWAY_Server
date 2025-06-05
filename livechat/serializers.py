@@ -1,9 +1,15 @@
 from rest_framework import serializers
 from .models import LiveChatMessage
+from accounts.utils import get_profile_image_url
 from django.conf import settings
 from accounts.models import User
 
 class SenderInfoSerializer(serializers.ModelSerializer):
+    profile_image = serializers.SerializerMethodField()
+
+    def get_profile_image(self, obj):
+        return get_profile_image_url(obj)
+
     class Meta:
         model = User
         fields = ['nickname', 'profile_image', 'nationality', 'national_code']
