@@ -92,7 +92,9 @@ class PushTestView(APIView):
             token=user.fcm_token,
             title="테스트 알림",
             body="테스트 푸시입니다",
-            image_url=image_url  # 이미지 URL을 전달
+            image_url=image_url,  # 이미지 URL을 전달
+            user=user
         )
 
         return Response({"message": "푸시 전송 성공!"})
+    

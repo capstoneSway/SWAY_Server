@@ -1,6 +1,7 @@
+# noti/fcm.py
 from firebase_admin import messaging
 
-def send_fcm_notification(token, title, body, image_url=None):
+def send_fcm_notification(token, title, body, user=None, image_url=None):
     # FCM 푸시 메시지 설정
     message = messaging.Message(
         notification=messaging.Notification(
@@ -9,6 +10,7 @@ def send_fcm_notification(token, title, body, image_url=None):
         ),
         data={
             'image_url': image_url or '',  # 이미지 URL이 없으면 빈 문자열 전달
+            'user_id': str(user.id) if user else '',  # user_id 추가 (옵션)
         },
         token=token,
     )

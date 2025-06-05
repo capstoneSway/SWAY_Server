@@ -98,22 +98,40 @@ class LightningDelete(generics.DestroyAPIView):
             raise PermissionDenied("삭제 권한이 없습니다.")
         
         # 호스트에게 알림
+        host_message = f"[{instance.title}] 번개가 삭제되었어요."
         Notification.objects.create(
             user=instance.host,
             type='번개모임',
             event=instance,
-            message=f"[{instance.title}] 번개가 삭제되었어요.",
+            message=host_message,
         )
+
+        if instance.host.fcm_token:
+            send_fcm_notification(
+                user = instance.host,
+                token=instance.host.fcm_token,
+                title="번개 모임 삭제 알림",
+                body=host_message
+            )
         
         # 참가자(호스트 제외)들에게 알림
         participants = instance.participants.exclude(id=instance.host.id)
         for participant in participants:
+            participant_message = f"[{instance.title}] 번개가 취소되었어요."
             Notification.objects.create(
                 user=participant,
                 type='번개모임',
                 event=instance,
-                message=f"[{instance.title}] 번개가 취소되었어요.",
+                message=participant_message,
             )
+            
+            if participant.fcm_token:
+                send_fcm_notification(
+                    user=participant,
+                    token=participant.fcm_token,
+                    title="번개 모임 삭제 알림",
+                    body=participant_message
+                )
 
         # 상태 비활성화 처리
         instance.is_active = False
@@ -148,6 +166,7 @@ class JoinLightning(APIView):
         # 푸시 알림 전송: 호스트에게
         if lightning.host.fcm_token:
             send_fcm_notification(
+                user=lightning.host,
                 token=lightning.host.fcm_token,
                 title="번개 참가 알림",
                 body=f"{user.nickname}님이 [{lightning.title}] 번개에 참가했어요."
@@ -195,6 +214,7 @@ class LeaveLightning(APIView):
         # 푸시 알림 전송: 호스트에게
         if lightning.host.fcm_token:
             send_fcm_notification(
+                user=lightning.host,
                 token=lightning.host.fcm_token,
                 title="번개 참가 취소 알림",
                 body=f"{user.nickname}님이 [{lightning.title}] 번개 참가를 취소했어요."
