@@ -147,10 +147,9 @@ class CommentList(ListCreateAPIView):
             raise PermissionDenied(msg)
         
         board_id = self.kwargs['board_id']
-        board = Board.objects.get(pk=board_id)
+        board = get_object_or_404(Board, pk=board_id)
         parent_id = self.request.data.get('parent_id')
         parent = get_object_or_404(Comment, pk=parent_id) if parent_id else None
-        parent_user = parent.user if parent else None
         comment = serializer.save(user=self.request.user, board=board, parent=parent)
         notify_on_comment_create(comment)
 

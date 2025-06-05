@@ -107,11 +107,17 @@ class CommentDetailSerializer(serializers.ModelSerializer):
     profile_image = serializers.SerializerMethodField()
     nationality = serializers.CharField(source='user.nationality', read_only=True)
     board_id = serializers.IntegerField(source='board.id', read_only=True)
-    parent = serializers.IntegerField(source='parent.id', read_only=True)
-    parent_nickname = serializers.CharField(source='parent_user.nickname', read_only=True)
+    parent = serializers.SerializerMethodField()
+    parent_nickname = serializers.SerializerMethodField()
 
     def get_profile_image(self, obj):
         return get_profile_image_url(obj.user)
+    
+    def get_parent(self, obj):
+        return obj.parent.id if obj.parent else None
+    
+    def get_parent_nickname(self, obj):
+        return obj.parent.user.nickname if obj.parent else None
     
     class Meta:
         model = Comment
