@@ -151,7 +151,7 @@ class CommentList(ListCreateAPIView):
         parent_id = self.request.data.get('parent_id')
         parent = get_object_or_404(Comment, pk=parent_id) if parent_id else None
         parent_user = parent.user if parent else None
-        comment = serializer.save(user=self.request.user, board=board, parent=parent, parent_user=parent_user)
+        comment = serializer.save(user=self.request.user, board=board, parent=parent)
         notify_on_comment_create(comment)
 
     def get_serializer_context(self):

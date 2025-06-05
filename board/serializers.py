@@ -10,15 +10,15 @@ class RecursiveSerializer(serializers.Serializer):
         return serializer.data
 
 class CommentSerializer(serializers.ModelSerializer):
-    parent_id = serializers.IntegerField(write_only=True, required=False)  # 그냥 숫자 받기
+    parent_id = serializers.SerializerMethodField()
     reply = serializers.SerializerMethodField()
     board_id = serializers.IntegerField(source='board.id', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
     nickname = serializers.CharField(source='user.nickname', read_only=True)
     profile_image = serializers.SerializerMethodField()
     nationality = serializers.CharField(source='user.nationality', read_only=True)
-    parent_username = serializers.CharField(source='parent_user.username', read_only=True)
-    parent_nickname = serializers.CharField(source='parent_user.nickname', read_only=True)
+    parent_username = serializers.SerializerMethodField()
+    parent_nickname = serializers.SerializerMethodField()
     comment_is_liked = serializers.SerializerMethodField() #commentlikes
     like_count = serializers.SerializerMethodField()
     is_blocked = serializers.SerializerMethodField()
@@ -26,6 +26,15 @@ class CommentSerializer(serializers.ModelSerializer):
     def get_profile_image(self, obj):
         return get_profile_image_url(obj.user)
     
+    def get_parent_id(self, obj):
+        return obj.parent.id if obj.parent else None
+    
+    def get_parent_username(self, obj):
+        return obj.parent.user.username if obj.parent else None
+
+    def get_parent_nickname(self, obj):
+        return obj.parent.user.nickname if obj.parent else None
+
     class Meta:
         model = Comment
         fields = ('id', 'username', 'nickname', 'profile_image', 'nationality', 
@@ -41,7 +50,7 @@ class CommentSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
 
         request = self.context.get('request')
-        if request and request.method in ['PUT', 'PATCH']:
+        if request and request.method in ['PUT', 'PATCH'] and 'parent' in self.fields:
             # 수정 요청일 경우 parent 필드를 읽기 전용으로
             self.fields['parent'].read_only = True
             
