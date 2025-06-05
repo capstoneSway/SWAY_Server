@@ -38,13 +38,13 @@ def notify_on_comment_create(comment):
                 user=board_owner,
                 title="New Comment",
                 body=message,
-                data={
-                    "type": "comment",
-                    "board_id": str(board.id),
-                    "comment_id": str(comment.id),
-                    "content": comment_preview,
-                    "username": author.username
-                }
+                # data={
+                #     "type": "comment",
+                #     "board_id": str(board.id),
+                #     "comment_id": str(comment.id),
+                #     "content": comment_preview,
+                #     "username": author.username
+                # }
             )
 
 
@@ -65,13 +65,13 @@ def notify_on_comment_create(comment):
                 user=parent_comment_user,
                 title="New Reply",
                 body=message,
-                data={
-                    "type": "reply",
-                    "board_id": str(board.id),
-                    "comment_id": str(comment.id),
-                    "content": parent_preview,
-                    "username": author.username
-                }
+                # data={
+                #     "type": "reply",
+                #     "board_id": str(board.id),
+                #     "comment_id": str(comment.id),
+                #     "content": parent_preview,
+                #     "username": author.username
+                # }
             )
 
 class BoardList(ListAPIView):
