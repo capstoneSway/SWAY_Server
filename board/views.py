@@ -18,9 +18,11 @@ def notify_on_comment_create(comment):
     board_owner = comment.board.user
     parent_comment_user = comment.parent.user if comment.parent else None
 
-    # 게시글 작성자 알림 (내가 쓴 글에 댓글 단 경우 제외)
+    content_preview = comment.content[:50]
+
+    # 게시글 작성자 알림
     if board_owner and board_owner != author:
-        message = f"{author.nickname} commented on your post."
+        message = f"{author.nickname} ({author.username}) commented on your post: \"{content_preview}\""
         Notification.objects.create(
             user=board_owner,
             type='board',
@@ -34,13 +36,15 @@ def notify_on_comment_create(comment):
             data={
                 "type": "comment",
                 "board_id": str(comment.board.id),
-                "comment_id": str(comment.id)
+                "comment_id": str(comment.id),
+                "content": content_preview,
+                "username": author.username
             }
         )
 
-    # 부모 댓글 작성자 알림 (대댓글일 경우, 자신 제외)
+    # 부모 댓글 작성자 알림 (대댓글)
     if comment.parent and parent_comment_user and parent_comment_user != author:
-        message = f"{author.nickname} replied to your comment."
+        message = f"{author.nickname} ({author.username}) replied to your comment: \"{content_preview}\""
         Notification.objects.create(
             user=parent_comment_user,
             type='comment',
@@ -54,7 +58,9 @@ def notify_on_comment_create(comment):
             data={
                 "type": "reply",
                 "board_id": str(comment.board.id),
-                "comment_id": str(comment.id)
+                "comment_id": str(comment.id),
+                "content": content_preview,
+                "username": author.username
             }
         )
 
@@ -181,16 +187,17 @@ class BoardLikeToggleView(GenericAPIView):
         board = get_object_or_404(Board, pk=board_id)
         if board.user == request.user:
             return Response({'error': 'You cannot like your own post.'}, status=400)
+
         like, created = BoardLike.objects.get_or_create(user=request.user, board=board)
-        if not created:
-            like.delete()
-            return Response({'liked': False})
-        return Response({'liked': True})
+        serializer = BoardSerializer(board, context={'request': request})
+        return Response(serializer.data)
 
     def delete(self, request, board_id):
         board = get_object_or_404(Board, pk=board_id)
         BoardLike.objects.filter(user=request.user, board=board).delete()
-        return Response({'liked': False})
+        serializer = BoardSerializer(board, context={'request': request})
+        return Response(serializer.data)
+
     
 class CommentLikeToggleView(GenericAPIView):
     permission_classes = [IsAuthenticated]
@@ -201,15 +208,19 @@ class CommentLikeToggleView(GenericAPIView):
             return Response({'error': 'You cannot like your own comment.'}, status=400)
 
         like, created = CommentLike.objects.get_or_create(user=request.user, comment=comment)
-        if not created:
-            like.delete()
-            return Response({'liked': False})
-        return Response({'liked': True})
+        liked = created  # True if newly liked
+
+        # ✅ 개선된 응답: 댓글 정보 통째로 반환
+        serializer = CommentSerializer(comment, context={'request': request})
+        return Response(serializer.data)
 
     def delete(self, request, board_id, comment_id):
         comment = get_object_or_404(Comment, pk=comment_id, board_id=board_id)
         CommentLike.objects.filter(user=request.user, comment=comment).delete()
-        return Response({'liked': False})
+
+        # ✅ 삭제 후에도 최신 상태 응답
+        serializer = CommentSerializer(comment, context={'request': request})
+        return Response(serializer.data)
 
     
 class BoardScrapToggleView(GenericAPIView):
@@ -221,15 +232,15 @@ class BoardScrapToggleView(GenericAPIView):
             return Response({'error': 'You cannot scrap your own post.'}, status=400)
 
         scrap, created = BoardScrap.objects.get_or_create(user=request.user, board=board)
-        if not created:
-            scrap.delete()
-            return Response({'scrapped': False})
-        return Response({'scrapped': True})
+        serializer = BoardSerializer(board, context={'request': request})
+        return Response(serializer.data)
 
     def delete(self, request, board_id):
         board = get_object_or_404(Board, pk=board_id)
         BoardScrap.objects.filter(user=request.user, board=board).delete()
-        return Response({'scrapped': False})
+        serializer = BoardSerializer(board, context={'request': request})
+        return Response(serializer.data)
+
 
 class BoardNotiToggleView(GenericAPIView):
     permission_classes = [IsAuthenticated]
@@ -237,31 +248,29 @@ class BoardNotiToggleView(GenericAPIView):
     def post(self, request, board_id):
         board = get_object_or_404(Board, pk=board_id)
         noti, created = Boardnoti.objects.get_or_create(user=request.user, board=board)
-        if not created:
-            noti.delete()
-            return Response({'notified': False})
-        return Response({'notified': True})
+        serializer = BoardSerializer(board, context={'request': request})
+        return Response(serializer.data)
 
     def delete(self, request, board_id):
         board = get_object_or_404(Board, pk=board_id)
         Boardnoti.objects.filter(user=request.user, board=board).delete()
-        return Response({'notified': False})
+        serializer = BoardSerializer(board, context={'request': request})
+        return Response(serializer.data)
     
 class CommentNotiToggleView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, comment_id):
         comment = get_object_or_404(Comment, pk=comment_id)
-        like, created = Commentnoti.objects.get_or_create(user=request.user, comment=comment)
-        if not created:
-            like.delete()
-            return Response({'notified': False})
-        return Response({'notified': True})
+        noti, created = Commentnoti.objects.get_or_create(user=request.user, comment=comment)
+        serializer = CommentSerializer(comment, context={'request': request})
+        return Response(serializer.data)
 
     def delete(self, request, comment_id):
         comment = get_object_or_404(Comment, pk=comment_id)
         Commentnoti.objects.filter(user=request.user, comment=comment).delete()
-        return Response({'notified': False})
+        serializer = CommentSerializer(comment, context={'request': request})
+        return Response(serializer.data)
     
 class BoardReportView(CreateAPIView):
     serializer_class = ReportSerializer
