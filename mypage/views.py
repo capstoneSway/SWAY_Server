@@ -36,8 +36,8 @@ class NotiSettingView(RetrieveUpdateAPIView):
         obj, created = NotiSetting.objects.get_or_create(
             user=self.request.user,
             defaults={
-                'post_noti': True,
                 'comment_noti': True,
+                'reply_noti': True,
                 'meetup_noti': True,
                 'chat_noti': True,
             })

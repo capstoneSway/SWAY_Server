@@ -15,7 +15,7 @@ class MyPageSerializer(serializers.Serializer):
 class NotiSettingSerializer(serializers.ModelSerializer):
     class Meta:
         model = NotiSetting
-        fields = ['post_noti', 'comment_noti', 'meetup_noti', 'chat_noti']
+        fields = ['comment_noti', 'reply_noti', 'meetup_noti', 'chat_noti']
 
 class RestrictionSerializer(serializers.ModelSerializer):
     restriction_type_display = serializers.CharField(source='get_restriction_type_display', read_only=True)

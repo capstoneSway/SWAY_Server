@@ -6,8 +6,8 @@ from django.utils import timezone
 # Create your models here.
 class NotiSetting(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    post_noti = models.BooleanField(default=True)
     comment_noti = models.BooleanField(default=True)
+    reply_noti = models.BooleanField(default=True)
     meetup_noti = models.BooleanField(default=True)
     chat_noti = models.BooleanField(default=True)
 
