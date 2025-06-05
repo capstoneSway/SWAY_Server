@@ -142,7 +142,7 @@ class JoinLightning(APIView):
             user = lightning.host,
             type = "번개모임",
             event = lightning,
-            message = f"{user.username}님이 [{lightning.title}] 번개에 참가했어요."
+            message = f"{user.nickname}님이 [{lightning.title}] 번개에 참가했어요."
         )
 
         # 푸시 알림 전송: 호스트에게
@@ -150,7 +150,7 @@ class JoinLightning(APIView):
             send_fcm_notification(
                 token=lightning.host.fcm_token,
                 title="번개 참가 알림",
-                body=f"{user.username}님이 [{lightning.title}] 번개에 참가했어요."
+                body=f"{user.nickname}님이 [{lightning.title}] 번개에 참가했어요."
             )
 
         participants = lightning.participants.all()
@@ -189,7 +189,7 @@ class LeaveLightning(APIView):
             user=lightning.host,
             type='번개모임',
             event=lightning,
-            message=f"{user.username}님이 [{lightning.title}] 번개 참가를 취소했어요.",
+            message=f"{user.nickname}님이 [{lightning.title}] 번개 참가를 취소했어요.",
         )
 
         # 푸시 알림 전송: 호스트에게
@@ -197,7 +197,7 @@ class LeaveLightning(APIView):
             send_fcm_notification(
                 token=lightning.host.fcm_token,
                 title="번개 참가 취소 알림",
-                body=f"{user.username}님이 [{lightning.title}] 번개 참가를 취소했어요."
+                body=f"{user.nickname}님이 [{lightning.title}] 번개 참가를 취소했어요."
             )
 
         participants = lightning.participants.all()
