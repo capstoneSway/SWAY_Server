@@ -32,19 +32,22 @@ def notify_on_comment_create(comment):
             board=board,
             message=message
         )
-        send_fcm_notification(
-            user=board_owner,
-            title="New Comment",
-            body=message,
-            token=board_owner.fcm_token,
-            data={
-                "type": "comment",
-                "board_id": str(board.id),
-                "comment_id": str(comment.id),
-                "content": comment_preview,
-                "username": author.username
-            }
-        )
+        if board_owner.fcm_token:
+            send_fcm_notification(
+                token=board_owner.fcm_token,
+                user=board_owner,
+                title="New Comment",
+                body=message,
+                data={
+                    "type": "comment",
+                    "board_id": str(board.id),
+                    "comment_id": str(comment.id),
+                    "content": comment_preview,
+                    "username": author.username
+                }
+            )
+
+
 
     # 부모 댓글 작성자 알림 (대댓글)
     if parent_comment and parent_comment_user and parent_comment_user != author:
@@ -56,19 +59,20 @@ def notify_on_comment_create(comment):
             board=board,
             message=message
         )
-        send_fcm_notification(
-            token=parent_comment_user.fcm_token,
-            user=parent_comment_user,
-            title="New Reply",
-            body=message,
-            data={
-                "type": "reply",
-                "board_id": str(board.id),
-                "comment_id": str(comment.id),
-                "content": parent_preview,
-                "username": author.username
-            }
-        )
+        if parent_comment_user.fcm_token:
+            send_fcm_notification(
+                token=parent_comment_user.fcm_token,
+                user=parent_comment_user,
+                title="New Reply",
+                body=message,
+                data={
+                    "type": "reply",
+                    "board_id": str(board.id),
+                    "comment_id": str(comment.id),
+                    "content": parent_preview,
+                    "username": author.username
+                }
+            )
 
 class BoardList(ListAPIView):
     queryset = Board.objects.all()
