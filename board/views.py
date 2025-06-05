@@ -311,7 +311,7 @@ class AddBlockUserView(GenericAPIView):
 class AddBlockCommentUserView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, comment_id):
+    def post(self, request, board_id, comment_id):
         comment = get_object_or_404(Comment, id=comment_id)
         blocker = request.user
         blocked = comment.user
