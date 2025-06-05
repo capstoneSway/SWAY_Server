@@ -24,7 +24,7 @@ def notify_on_comment_create(comment):
     comment_preview = comment.content[:50]
 
     # 게시글 작성자 알림
-    if board_owner and board_owner != author:
+    if board_owner and board_owner != author and (not comment.parent or comment.parent.user != board_owner):
         message = f"{author.nickname} ({author.username}) commented on your post \"{board_title}\": \"{comment_preview}\""
         Notification.objects.create(
             user=board_owner,
