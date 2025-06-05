@@ -187,16 +187,16 @@ class BoardLikeToggleView(GenericAPIView):
         board = get_object_or_404(Board, pk=board_id)
         if board.user == request.user:
             return Response({'error': 'You cannot like your own post.'}, status=400)
-
         like, created = BoardLike.objects.get_or_create(user=request.user, board=board)
-        serializer = BoardSerializer(board, context={'request': request})
-        return Response(serializer.data)
+        if not created:
+            like.delete()
+            return Response({'liked': False})
+        return Response({'liked': True})
 
     def delete(self, request, board_id):
         board = get_object_or_404(Board, pk=board_id)
         BoardLike.objects.filter(user=request.user, board=board).delete()
-        serializer = BoardSerializer(board, context={'request': request})
-        return Response(serializer.data)
+        return Response({'liked': False})
 
     
 class CommentLikeToggleView(GenericAPIView):
@@ -232,14 +232,15 @@ class BoardScrapToggleView(GenericAPIView):
             return Response({'error': 'You cannot scrap your own post.'}, status=400)
 
         scrap, created = BoardScrap.objects.get_or_create(user=request.user, board=board)
-        serializer = BoardSerializer(board, context={'request': request})
-        return Response(serializer.data)
+        if not created:
+            scrap.delete()
+            return Response({'scrapped': False})
+        return Response({'scrapped': True})
 
     def delete(self, request, board_id):
         board = get_object_or_404(Board, pk=board_id)
         BoardScrap.objects.filter(user=request.user, board=board).delete()
-        serializer = BoardSerializer(board, context={'request': request})
-        return Response(serializer.data)
+        return Response({'scrapped': False})
 
 
 class BoardNotiToggleView(GenericAPIView):
