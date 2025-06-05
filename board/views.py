@@ -15,18 +15,21 @@ from rest_framework.response import Response
 #댓글 알림 함수
 def notify_on_comment_create(comment):
     author = comment.user
-    board_owner = comment.board.user
-    parent_comment_user = comment.parent.user if comment.parent else None
+    board = comment.board
+    board_owner = board.user
+    parent_comment = comment.parent
+    parent_comment_user = parent_comment.user if parent_comment else None
 
-    content_preview = comment.content[:50]
+    board_title = board.title[:30]
+    comment_preview = comment.content[:50]
 
     # 게시글 작성자 알림
     if board_owner and board_owner != author:
-        message = f"{author.nickname} ({author.username}) commented on your post: \"{content_preview}\""
+        message = f"{author.nickname} ({author.username}) commented on your post \"{board_title}\": \"{comment_preview}\""
         Notification.objects.create(
             user=board_owner,
             type='board',
-            board=comment.board,
+            board=board,
             message=message
         )
         send_fcm_notification(
@@ -35,20 +38,21 @@ def notify_on_comment_create(comment):
             body=message,
             data={
                 "type": "comment",
-                "board_id": str(comment.board.id),
+                "board_id": str(board.id),
                 "comment_id": str(comment.id),
-                "content": content_preview,
+                "content": comment_preview,
                 "username": author.username
             }
         )
 
     # 부모 댓글 작성자 알림 (대댓글)
-    if comment.parent and parent_comment_user and parent_comment_user != author:
-        message = f"{author.nickname} ({author.username}) replied to your comment: \"{content_preview}\""
+    if parent_comment and parent_comment_user and parent_comment_user != author:
+        parent_preview = parent_comment.content[:50]
+        message = f"{author.nickname} ({author.username}) replied to your comment \"{parent_preview}\" on \"{board_title}\""
         Notification.objects.create(
             user=parent_comment_user,
             type='comment',
-            board=comment.board,
+            board=board,
             message=message
         )
         send_fcm_notification(
@@ -57,9 +61,9 @@ def notify_on_comment_create(comment):
             body=message,
             data={
                 "type": "reply",
-                "board_id": str(comment.board.id),
+                "board_id": str(board.id),
                 "comment_id": str(comment.id),
-                "content": content_preview,
+                "content": parent_preview,
                 "username": author.username
             }
         )
