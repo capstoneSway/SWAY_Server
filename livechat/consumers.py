@@ -9,6 +9,7 @@ from accounts.models import User
 from asgiref.sync import sync_to_async
 from asgiref.sync import async_to_sync
 from django.contrib.auth.models import AnonymousUser
+from mypage.models import NotiSetting
 
 User = get_user_model()
 
@@ -63,8 +64,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         for user in participants:
             # 사용자 알림 설정 확인
             noti_setting = await self.get_noti_setting(user)
-            if noti_setting.chat_noti and user.fcm_token:
+            if noti_setting and noti_setting.chat_noti and user.fcm_token:
                     send_fcm_notification(
+                        user=user,
                         token=user.fcm_token,
                         title="New chat received",
                         body=f"Message from {sender.nickname or sender.email}: {message}"
@@ -115,4 +117,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # 알림 설정을 가져오는 함수 (chat_noti 필드를 체크)
     @database_sync_to_async
     def get_noti_setting(self, user):
-        return user.noti_setting  # 유저의 알림 설정을 가져옵니다.
+        try:
+            return NotiSetting.objects.get(user=user)  # 유저의 알림 설정을 가져옵니다.
+        except NotiSetting.DoesNotExist:
+            return None  # 알림 설정이 없으면 None을 반환
