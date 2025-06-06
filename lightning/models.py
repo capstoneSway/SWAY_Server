@@ -17,6 +17,7 @@ class Lightning(models.Model):
         IN_PROGRESS = 'inProgress', '모집 중'
         DONE = 'done', '마감'
         CANCELED = 'canceled', '취소'
+        FINISHED = 'finished', '종료'
 
     class Category(models.TextChoices):
         TRAVEL = 'travel', '여행'
