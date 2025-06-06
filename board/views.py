@@ -24,16 +24,15 @@ def notify_on_comment_create(comment):
     board_title = board.title[:30]
     comment_preview = comment.content[:50]
 
-    # 게시글 작성자 알림
-    if board_owner and board_owner != author and (not comment.parent or comment.parent.user != board_owner):
+    # 게시글 작성자 알림 (대댓글일 때는 알림을 보내지 않음)
+    if board_owner and board_owner != author and not parent_comment:
         # 게시글 작성자의 알림 설정 가져오기
         try:
             board_owner_noti_setting = NotiSetting.objects.get(user=board_owner)
         except NotiSetting.DoesNotExist:
             board_owner_noti_setting = None
         
-        # parent_comment가 없거나, 알림 설정이 없거나 comment_noti가 False이면 알림을 보내지 않음
-        if not parent_comment and board_owner_noti_setting and board_owner_noti_setting.comment_noti:
+        if board_owner_noti_setting and board_owner_noti_setting.comment_noti:
             message = f"{author.nickname} ({author.username}) commented on your post \"{board_title}\": \"{comment_preview}\""
             Notification.objects.create(
                 user=board_owner,
@@ -57,7 +56,6 @@ def notify_on_comment_create(comment):
         except NotiSetting.DoesNotExist:
             parent_comment_user_noti_setting = None
         
-        # 알림 설정이 없거나 reply_noti가 False이면 알림을 보내지 않음
         if parent_comment_user_noti_setting and parent_comment_user_noti_setting.comment_noti:
             parent_preview = parent_comment.content[:50]
             message = f"{author.nickname} ({author.username}) replied to your comment \"{parent_preview}\" on \"{board_title}\""
