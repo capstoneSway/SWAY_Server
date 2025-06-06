@@ -228,7 +228,8 @@ class CommentLikeToggleView(GenericAPIView):
         comment = get_object_or_404(Comment, pk=comment_id, board_id=board_id)
         CommentLike.objects.filter(user=request.user, comment=comment).delete()
 
-        # ✅ 삭제 후에도 최신 상태 응답
+        comment.refresh_from_db()  # 좋아요 수, 상태 갱신
+
         serializer = CommentSerializer(comment, context={'request': request})
         return Response(serializer.data)
 
