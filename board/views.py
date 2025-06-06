@@ -212,15 +212,20 @@ class BoardLikeToggleView(GenericAPIView):
 class CommentLikeToggleView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 
+class CommentLikeToggleView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, board_id, comment_id):
         comment = get_object_or_404(Comment, pk=comment_id, board_id=board_id)
+
         if comment.user == request.user:
             return Response({'error': 'You cannot like your own comment.'}, status=400)
 
         like, created = CommentLike.objects.get_or_create(user=request.user, comment=comment)
-        liked = created  # True if newly liked
+        if not created:
+            like.delete()
 
-        # ✅ 개선된 응답: 댓글 정보 통째로 반환
+        # 🔁 refresh_from_db 없이도 최신 반영 가능
         serializer = CommentSerializer(comment, context={'request': request})
         return Response(serializer.data)
 
@@ -228,8 +233,7 @@ class CommentLikeToggleView(GenericAPIView):
         comment = get_object_or_404(Comment, pk=comment_id, board_id=board_id)
         CommentLike.objects.filter(user=request.user, comment=comment).delete()
 
-        comment.refresh_from_db()  # 좋아요 수, 상태 갱신
-
+        # ✅ 삭제 후에도 최신 상태 응답
         serializer = CommentSerializer(comment, context={'request': request})
         return Response(serializer.data)
 
