@@ -113,14 +113,6 @@ class LightningDelete(generics.DestroyAPIView):
                 event=instance,
                 message=host_message,
             )
-
-            if instance.host.fcm_token:
-                send_fcm_notification(
-                    user = instance.host,
-                    token=instance.host.fcm_token,
-                    title="번개 모임 삭제 알림",
-                    body=host_message
-                )
         
         # 참가자(호스트 제외)들에게 알림
         participants = instance.participants.exclude(id=instance.host.id)
@@ -187,6 +179,12 @@ class JoinLightning(APIView):
 
             # 푸시 알림 전송: 호스트에게
             if lightning.host.fcm_token:
+                # Notification.objects.create(
+                # user = lightning.host,
+                # type = "번개모임",
+                # event = lightning,
+                # message = f"호스트에게 fcm_token이 존재합니다."
+                # )
                 send_fcm_notification(
                     user=lightning.host,
                     token=lightning.host.fcm_token,

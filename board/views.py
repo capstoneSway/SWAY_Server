@@ -32,8 +32,8 @@ def notify_on_comment_create(comment):
         except NotiSetting.DoesNotExist:
             board_owner_noti_setting = None
         
-        # 알림 설정이 없거나 comment_noti가 False이면 알림을 보내지 않음
-        if board_owner_noti_setting and board_owner_noti_setting.comment_noti:
+        # parent_comment가 없거나, 알림 설정이 없거나 comment_noti가 False이면 알림을 보내지 않음
+        if not parent_comment and board_owner_noti_setting and board_owner_noti_setting.comment_noti:
             message = f"{author.nickname} ({author.username}) commented on your post \"{board_title}\": \"{comment_preview}\""
             Notification.objects.create(
                 user=board_owner,
