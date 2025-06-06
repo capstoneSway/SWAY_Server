@@ -66,8 +66,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if noti_setting.chat_noti and user.fcm_token:
                     send_fcm_notification(
                         token=user.fcm_token,
-                        title="새 채팅 도착",
-                        body=f"{sender.nickname or sender.email}님의 메시지: {message}"
+                        title="New chat received",
+                        body=f"Message from {sender.nickname or sender.email}: {message}"
                     )
 
         # WebSocket 메시지 브로드캐스트만 수행

@@ -20,7 +20,7 @@ def update_lightning_status(request):
     lightnings = Lightning.objects.filter(status='inProgress', end_time__lt=now)
 
     updated_count = lightnings.update(status='done')
-    return JsonResponse({'message': f'{updated_count} 개의 번개 모임 상태가 업데이트되었습니다.'})
+    return JsonResponse({'message': f'{updated_count} Meetup status has been updated' if updated_count == 1 else f'{updated_count} Meetups status have been updated'})
 
 # 전체 목록 조회 (모든 사용자 가능)
 class LightningList(generics.ListAPIView):
@@ -75,13 +75,13 @@ class LightningUpdate(generics.UpdateAPIView):
         lightning = self.get_object()
 
         if self.request.user != lightning.host:
-            raise PermissionDenied("수정 권한이 없습니다.")
+            raise PermissionDenied("You do not have permission to edit.")
 
         new_max = serializer.validated_data.get('max_participant', lightning.max_participant)
 
         if new_max < lightning.current_participant:
             raise ValidationError(
-                f"현재 참여 중인 인원({lightning.current_participant})보다 적게 설정할 수 없습니다."
+                f"You cannot set a value lower than the current number of participants ({lightning.current_participant})."
             )
 
         serializer.save()
@@ -96,17 +96,17 @@ class LightningDelete(generics.DestroyAPIView):
 
     def perform_destroy(self, instance):
         if self.request.user != instance.host:
-            raise PermissionDenied("삭제 권한이 없습니다.")
+            raise PermissionDenied("You do not have permission to delete.")
         
         # 호스트의 NotiSetting 가져오기
         try:
             host_noti_setting = NotiSetting.objects.get(user=instance.host)
         except NotiSetting.DoesNotExist:
-            return Response({"error": "호스트의 알림 설정이 없습니다."}, status=404)
+            return Response({"error": "Host's notification settings are not available."}, status=404)
 
         if host_noti_setting and host_noti_setting.meetup_noti:
             # 호스트에게 알림
-            host_message = f"[{instance.title}] 번개가 삭제되었어요."
+            host_message = f"The meetup [{instance.title}] has been deleted."
             Notification.objects.create(
                 user=instance.host,
                 type='번개모임',
@@ -124,7 +124,7 @@ class LightningDelete(generics.DestroyAPIView):
                 continue
 
             if participant_noti_setting and participant_noti_setting.meetup_noti:
-                participant_message = f"[{instance.title}] 번개가 취소되었어요."
+                participant_message =  f"The meetup [{instance.title}] has been canceled."
                 Notification.objects.create(
                     user=participant,
                     type='번개모임',
@@ -136,7 +136,7 @@ class LightningDelete(generics.DestroyAPIView):
                     send_fcm_notification(
                         user=participant,
                         token=participant.fcm_token,
-                        title="번개 모임 삭제 알림",
+                        title="Meetup Deletion",
                         body=participant_message
                     )
 
@@ -154,9 +154,9 @@ class JoinLightning(APIView):
         user = request.user
 
         if lightning.participants.filter(id=user.id).exists():
-            raise ValidationError("이미 참가한 번개입니다.")
+            raise ValidationError("You have already joined this lightning event.")
         if lightning.participants.count() >= lightning.max_participant:
-            raise ValidationError("참가 인원이 초과되었습니다.")
+            raise ValidationError("The number of participants has exceeded the limit.")
         
         lightning.participants.add(user)
         lightning.current_participant += 1
@@ -166,7 +166,7 @@ class JoinLightning(APIView):
         try:
             host_noti_setting = NotiSetting.objects.get(user=lightning.host)
         except NotiSetting.DoesNotExist:
-            return Response({"error": "호스트의 알림 설정이 없습니다."}, status=404)
+            return Response({"error": "Host's notification settings are not available."}, status=404)
 
         if host_noti_setting and host_noti_setting.meetup_noti:
         # 알림 생성: 참가자가 번개 모임에 참가했음을 호스트에게 알림
@@ -174,29 +174,23 @@ class JoinLightning(APIView):
                 user = lightning.host,
                 type = "번개모임",
                 event = lightning,
-                message = f"{user.nickname}님이 [{lightning.title}] 번개에 참가했어요."
+                message = f"{user.nickname} has joined the lightning event [{lightning.title}]."
             )
 
             # 푸시 알림 전송: 호스트에게
             if lightning.host.fcm_token:
-                # Notification.objects.create(
-                # user = lightning.host,
-                # type = "번개모임",
-                # event = lightning,
-                # message = f"호스트에게 fcm_token이 존재합니다."
-                # )
                 send_fcm_notification(
                     user=lightning.host,
                     token=lightning.host.fcm_token,
-                    title="번개 참가 알림",
-                    body=f"{user.nickname}님이 [{lightning.title}] 번개에 참가했어요."
+                    title="Meetup Join",
+                    body=f"{user.nickname} has joined the lightning event [{lightning.title}]."
                 )
 
         participants = lightning.participants.all()
         serialized_participants = ParticipantSerializer(participants, many=True).data
 
         return Response({
-            "message": "참가 신청이 완료되었습니다.", 
+            "message": "Your application has been completed.", 
             "participants": serialized_participants
             }, status=200)
     
@@ -211,11 +205,12 @@ class LeaveLightning(APIView):
 
         # 호스트는 참가 취소 불가 (삭제만 가능)
         if lightning.host == user:
-            raise ValidationError("호스트는 참가 취소할 수 없습니다. 번개를 삭제해주세요.")
+            raise ValidationError("The host cannot cancel their participation. Please delete the lightning event.")
 
         # 참가 여부 확인
         if not lightning.participants.filter(id=user.id).exists():
-            raise ValidationError("참가하지 않은 번개입니다.")
+            raise ValidationError("You have not joined this lightning event.")
+
 
         # 참가 취소 로직
         lightning.participants.remove(user)
@@ -226,7 +221,7 @@ class LeaveLightning(APIView):
         try:
             host_noti_setting = NotiSetting.objects.get(user=lightning.host)
         except NotiSetting.DoesNotExist:
-            return Response({"error": "호스트의 알림 설정이 없습니다."}, status=404)
+            return Response({"error": "Host's notification settings are not available."}, status=404)
 
         if host_noti_setting and host_noti_setting.meetup_noti:
             # 알림 : 호스트에게 참가 취소 알림
@@ -234,7 +229,7 @@ class LeaveLightning(APIView):
                 user=lightning.host,
                 type='번개모임',
                 event=lightning,
-                message=f"{user.nickname}님이 [{lightning.title}] 번개 참가를 취소했어요.",
+                message=f"{user.nickname} has canceled their participation in the lightning event [{lightning.title}]."
             )
 
             # 푸시 알림 전송: 호스트에게
@@ -242,15 +237,15 @@ class LeaveLightning(APIView):
                 send_fcm_notification(
                     user=lightning.host,
                     token=lightning.host.fcm_token,
-                    title="번개 참가 취소 알림",
-                    body=f"{user.nickname}님이 [{lightning.title}] 번개 참가를 취소했어요."
+                    title="Leave Meetup",
+                    body=f"{user.nickname} has canceled their participation in the lightning event [{lightning.title}]."
                 )
 
         participants = lightning.participants.all()
         serialized_participants = ParticipantSerializer(participants, many=True).data
 
         return Response({
-            "message": "참가가 취소되었습니다.",
+            "message": "Your participation has been canceled.",
             "participants": serialized_participants
             }, status=200)
 
