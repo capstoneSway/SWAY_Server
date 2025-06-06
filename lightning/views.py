@@ -24,13 +24,13 @@ def update_lightning_status(request):
 
 # 전체 목록 조회 (모든 사용자 가능)
 class LightningList(generics.ListAPIView):
-    queryset = Lightning.objects.filter(status=Lightning.Status.IN_PROGRESS)
+    queryset = Lightning.objects.all()
     serializer_class = LightningSerializer
     permission_classes = [permissions.AllowAny]
 
 # 상세 조회 (모든 사용자 가능)
 class LightningDetail(generics.RetrieveAPIView):
-    queryset = Lightning.objects.filter(status=Lightning.Status.IN_PROGRESS)
+    queryset = Lightning.objects.all()
     serializer_class = LightningDetailSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -38,7 +38,7 @@ class LightningDetail(generics.RetrieveAPIView):
 class LightningCategoryFilterView(APIView):
     def get(self, request):
         category = request.query_params.get('category')
-        queryset = Lightning.objects.filter(category=category, status=Lightning.Status.IN_PROGRESS)
+        queryset = Lightning.objects.filter(category=category)
         serializer = LightningSerializer(queryset, many=True)
         return Response(serializer.data)
 
