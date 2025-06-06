@@ -153,6 +153,22 @@ class JoinLightning(APIView):
         lightning = get_object_or_404(Lightning, pk=pk)
         user = request.user
 
+        # 성별 조건 확인
+        user_gender = user.gender  # 사용자의 성별
+        event_gender = lightning.gender  # 번개 모임의 성별 조건
+
+        # 번개 모임의 성별 조건이 "남자만"이고 사용자가 여성인 경우 참가 불가
+        if event_gender == Lightning.Gender.MALE and user_gender != Lightning.Gender.MALE:
+            raise ValidationError("You cannot join this lightning event because it's for males only.")
+        
+        # 번개 모임의 성별 조건이 "여자만"이고 사용자가 남성인 경우 참가 불가
+        if event_gender == Lightning.Gender.FEMALE and user_gender != Lightning.Gender.FEMALE:
+            raise ValidationError("You cannot join this lightning event because it's for females only.")
+        
+        # 번개 모임의 성별 조건이 "모두"인 경우 성별에 관계없이 참가 가능
+        if event_gender == Lightning.Gender.ALL:
+            pass  # 성별에 관계없이 참가 가능
+
         if lightning.participants.filter(id=user.id).exists():
             raise ValidationError("You have already joined this lightning event.")
         if lightning.participants.count() >= lightning.max_participant:
