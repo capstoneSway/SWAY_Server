@@ -256,8 +256,6 @@ class CurrentLightningView(APIView):
     def get(self, request):
         user = request.user
         lightnings = Lightning.objects.filter(
-            is_active=True
-        ).filter(
             Q(host=user) | Q(participants=user)
         ).distinct()
         serializer = LightningSerializer(lightnings, many=True)
@@ -269,7 +267,7 @@ class HostedLightningView(APIView):
 
     def get(self, request):
         user = request.user
-        lightnings = Lightning.objects.filter(host=user, is_active=True)
+        lightnings = Lightning.objects.filter(host=user)
         serializer = LightningSerializer(lightnings, many=True)
         return Response(serializer.data)
 
@@ -281,7 +279,6 @@ class ParticipatedLightningView(APIView):
         user = request.user
         lightnings = Lightning.objects.filter(
             participants=user,  # ManyToManyField 연결 필드
-            is_active=True
         ).exclude(host=user)  # host는 제외
         serializer = LightningSerializer(lightnings, many=True)
         return Response(serializer.data)
