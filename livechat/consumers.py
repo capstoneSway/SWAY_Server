@@ -57,15 +57,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # ✅ 텍스트 메시지일 때만 DB에 저장
         if message:
             chat_message = await self.create_message(room, sender, message)
-        # FCM 푸시 전송 (동기 함수이므로 await 사용 금지)
+
+        # 채팅 알림이 활성화된 사용자에게만 FCM 푸시 알림 전송
         participants = await self.get_participants(room, sender)
         for user in participants:
-            if user.fcm_token:
-                send_fcm_notification(
-                    token=user.fcm_token,
-                    title="새 채팅 도착",
-                    body=f"{sender.nickname or sender.email}님의 메시지: {message}"
-                )
+            # 사용자 알림 설정 확인
+            noti_setting = await self.get_noti_setting(user)
+            if noti_setting.chat_noti and user.fcm_token:
+                    send_fcm_notification(
+                        token=user.fcm_token,
+                        title="새 채팅 도착",
+                        body=f"{sender.nickname or sender.email}님의 메시지: {message}"
+                    )
+
         # WebSocket 메시지 브로드캐스트만 수행
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -107,3 +111,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_participants(self, room, sender):
         return list(room.participants.exclude(id=sender.id))
+    
+    # 알림 설정을 가져오는 함수 (chat_noti 필드를 체크)
+    @database_sync_to_async
+    def get_noti_setting(self, user):
+        return user.noti_setting  # 유저의 알림 설정을 가져옵니다.
