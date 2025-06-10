@@ -169,6 +169,7 @@ class JoinLightning(APIView):
         
         lightning.participants.add(user)
         lightning.current_participant += 1
+        lightning.save()
         lightning.update_status()
 
         # 호스트의 NotiSetting 가져오기
@@ -223,6 +224,7 @@ class LeaveLightning(APIView):
         # 참가 취소 로직
         lightning.participants.remove(user)
         lightning.current_participant = lightning.current_participant - 1
+        lightning.save()
         lightning.update_status()
 
         # 호스트의 NotiSetting 가져오기
