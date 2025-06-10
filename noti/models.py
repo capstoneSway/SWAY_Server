@@ -6,7 +6,8 @@ from django.conf import settings
 class NotificationType(models.TextChoices):
     LIGHTNING = '번개모임', '번개 모임'
     CHAT = '채팅', '채팅'
-    BOARD = '게시판', '게시판'
+    COMMENTS = '댓글', '댓글'
+    REPLIES = '대댓글', '대댓글'
 
 class Notification(models.Model):
     # 알림을 받는 대상자 (유저)

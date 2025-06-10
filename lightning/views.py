@@ -15,13 +15,6 @@ from django.http import JsonResponse
 from .models import Lightning
 from mypage.models import NotiSetting
 
-def update_lightning_status(request):
-    now = timezone.now()
-    lightnings = Lightning.objects.filter(status='inProgress', end_time__lt=now)
-
-    updated_count = lightnings.update(status='done')
-    return JsonResponse({'message': f'{updated_count} Meetup status has been updated' if updated_count == 1 else f'{updated_count} Meetups status have been updated'})
-
 # 전체 목록 조회 (모든 사용자 가능)
 class LightningList(generics.ListAPIView):
     queryset = Lightning.objects.all()
@@ -227,10 +220,9 @@ class LeaveLightning(APIView):
         if not lightning.participants.filter(id=user.id).exists():
             raise ValidationError("You have not joined this lightning event.")
 
-
         # 참가 취소 로직
         lightning.participants.remove(user)
-        lightning.current_participant -= 1
+        lightning.current_participant = lightning.current_participant - 1
         lightning.update_status()
 
         # 호스트의 NotiSetting 가져오기
