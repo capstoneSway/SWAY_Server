@@ -3,14 +3,12 @@ from .views import (
     LightningList, LightningCreate, LightningDetail,
     LightningUpdate, LightningDelete, JoinLightning, LeaveLightning,
     LightningCategoryFilterView, LightningStatusFilterView,
-    CurrentLightningView, HostedLightningView, ParticipatedLightningView,
-    update_lightning_status
+    CurrentLightningView, HostedLightningView, ParticipatedLightningView
 )
 
 app_name = 'lightning'
 
 urlpatterns = [
-    path('update-status/', update_lightning_status, name='update_lightning_status'),
     path('', LightningList.as_view(), name='meetup-list'),
     path('create/', LightningCreate.as_view(), name='meetup-create'),
     path('<int:pk>/', LightningDetail.as_view(), name='meetup-detail'),
